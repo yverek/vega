@@ -12,7 +12,7 @@
 <Toaster richColors closeButton position={'top-center'} />
 <ModeWatcher />
 
-<div class="mx-16 grid min-h-[100dvh] grid-rows-[auto_1fr_auto]">
+<div class="mx-auto grid min-h-[100dvh] w-[95%] grid-rows-[auto_1fr_auto]">
 	<Header />
 	{@render children()}
 </div>

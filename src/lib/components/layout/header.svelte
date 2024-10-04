@@ -6,7 +6,7 @@
 	import { Button } from '$lib/components/ui/button';
 </script>
 
-<header class="border-b border-gray-500 py-4 dark:border-gray-600">
+<header class="mb-8 border-b border-gray-500 py-4 dark:border-gray-600">
 	<nav class="flex justify-between">
 		<a href="/" class="flex items-center gap-3">
 			<img src="/svelte-logo.svg" class="size-9" alt="Svelte Form Builder logo" />

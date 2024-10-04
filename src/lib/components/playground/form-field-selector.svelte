@@ -15,7 +15,7 @@
 	];
 </script>
 
-<div class="my-10 flex justify-center gap-3">
+<div class="mb-8 flex justify-center gap-3">
 	{#each fields as field}
 		<div class="flex items-center gap-1">
 			<Button variant="outline" on:click={() => form.addField(field)} class="text-md rounded-full" size="lg">

@@ -55,61 +55,93 @@
 		textarea: (field: FormField) => zodString(field)
 	};
 
-	const checkboxComponent = ({ name, disabled }: FormField) => {
+	const checkboxComponent = ({ name, label, description, disabled }: FormField) => {
+		let result = '';
 		const isDisabled = disabled ? '{disabled} ' : '';
 
-		return `<Checkbox id="${name}" bind:checked={$formData.${name}} ${isDisabled}/>`;
-	};
-
-	const comboboxComponent = ({ type, name, disabled }: FormField) => {
-		const isDisabled = disabled ? '{disabled} ' : '';
-
-		let result = '<Popover.Root bind:open let:ids>';
-		result += '\n        <Popover.Trigger asChild let:builder>';
-		result +=
-			'\n          <Button builders={[builder]} variant="outline" role="combobox" aria-expanded={open} class="w-[200px] justify-between">';
-		result += '\n            {selectedValue}';
-		result += '\n            <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />';
-		result += '\n          </Button>';
-		result += '\n        </Popover.Trigger>';
-		result += '\n        <Popover.Content class="w-[200px] p-0">';
-		result += '\n          <Command.Root>';
-		result += '\n            <Command.Input placeholder="Search framework..." />';
-		result += `\n            <Command.Empty>No framework found.</Command.Empty>`;
-		result += `\n            <Command.Group>`;
-		result += `\n              {#each frameworks as framework}`;
-		result += `\n                <Command.Item value={framework.value} onSelect={(currentValue) => {`;
-		result += `\n                    value = currentValue;`;
-		result += `\n                    closeAndFocusTrigger(ids.trigger);`;
-		result += `\n                  }}`;
-		result += `\n                >`;
-		result += `\n                  <Check class={cn("mr-2 h-4 w-4", value !== framework.value && "text-transparent")} />`;
-		result += `\n                  {framework.label}`;
-		result += `\n                </Command.Item>`;
-		result += `\n              {/each}`;
-		result += `\n            </Command.Group>`;
-		result += `\n          </Command.Root>`;
-		result += `\n        </Popover.Content>`;
-		result += `\n      </Popover.Root>`;
+		result += `  <Form.Field {form} name="${name}" class="my-4 flex items-center gap-2">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <Checkbox {...attrs} bind:checked={$formData.agree} ${isDisabled}/>\n`;
+		result += `      <Form.Label>${label}</Form.Label>\n`;
+		result += `    </Form.Control>\n`;
+		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		result += `    <Form.FieldErrors />\n`;
+		result += `  </Form.Field>\n`;
 
 		return result;
 	};
 
-	const datepickerComponent = ({ type, name, disabled }: FormField) => {
-		const isDisabled = disabled ? '{disabled} ' : '';
+	const comboboxComponent = ({ name, label, description, disabled }: FormField) => {
+		let result = '';
+		const isDisabled = disabled ? '{disabled} ' : ''; // TODO check if you can disable popover, if yes add it
 
-		let result = '<Popover.Root openFocus>';
-		result += '\n        <Popover.Trigger asChild let:builder>';
-		result +=
-			'\n          <Button variant="outline" class={cn("w-[280px] justify-start text-left font-normal", !value && "text-muted-foreground")} builders={[builder]}>';
-		result += '\n          <CalendarIcon class="mr-2 h-4 w-4" />';
-		result += '\n            {value ? df.format(value.toDate(getLocalTimeZone())) : "Select a date"}';
-		result += '\n          </Button>';
-		result += '\n        </Popover.Trigger>';
-		result += '\n        <Popover.Content class="w-auto p-0">';
-		result += '\n          <Calendar bind:value initialFocus />';
-		result += '\n        </Popover.Content>';
-		result += `\n      </Popover.Root>`;
+		// TODO this component is almost done, the last thing to do is to add {label, value} array to schema.ts
+		// TODO add button in dialog to build this array with user data
+		result += `  <Form.Field {form} name="${name}" class="flex flex-col">\n`;
+		result += `    <Popover.Root bind:open let:ids>\n`;
+		result += `      <Form.Control let:attrs>\n`;
+		result += `        <Form.Label>${label}</Form.Label>\n`;
+		result += `        <Popover.Trigger class={cn(buttonVariants({ variant: "outline" }), "w-[200px] justify-between", !$formData.${name} && "text-muted-foreground")} role="combobox" {...attrs}>\n`;
+		result += `          {languages.find((f) => f.value === $formData.${name})?.label ?? "Select language"}\n`;
+		result += `          <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />\n`;
+		result += `        </Popover.Trigger>\n`;
+		result += `        <input hidden value={$formData.${name}} name={attrs.name} />\n`;
+		result += `      </Form.Control>\n`;
+		result += `      <Popover.Content class="w-[200px] p-0">\n`;
+		result += `        <Command.Root>\n`;
+		result += `          <Command.Input autofocus placeholder="Search language..." class="h-9" />\n`;
+		result += `          <Command.Empty>No language found.</Command.Empty>\n`;
+		result += `          <Command.Group>\n`;
+		result += `            {#each languages as language}\n`;
+		result += `              <Command.Item value={language.label} onSelect={() => {\n`;
+		result += `                  $formData.${name} = language.value;\n`;
+		result += `                  closeAndFocusTrigger(ids.trigger);\n`;
+		result += `                }}\n`;
+		result += `              >\n`;
+		result += `                {language.label}\n`;
+		result += `                <Check class={cn("ml-auto h-4 w-4", language.value !== $formData.${name} && "text-transparent")} />\n`;
+		result += `              </Command.Item>\n`;
+		result += `            {/each}\n`;
+		result += `          </Command.Group>\n`;
+		result += `        </Command.Root>\n`;
+		result += `      </Popover.Content>\n`;
+		result += `    </Popover.Root>\n`;
+		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		result += `    <Form.FieldErrors />\n`;
+		result += `  </Form.Field>\n`;
+
+		return result;
+	};
+
+	const datepickerComponent = ({ name, label, description, disabled }: FormField) => {
+		let result = '';
+		const isDisabled = disabled ? '{disabled} ' : ''; // TODO check if you can disable popover, if yes add it
+
+		result += `  <Form.Field {form} name="${name}" class="flex flex-col">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <Form.Label>${label}</Form.Label>\n`;
+		result += `      <Popover.Root>\n`;
+		result += `        <Popover.Trigger {...attrs} class={cn(buttonVariants({ variant: "outline" }), "w-[280px] justify-start pl-4 text-left font-normal", !value && "text-muted-foreground")}>\n`;
+		result += `          {value ? df.format(value.toDate(getLocalTimeZone())) : "Pick a date"}\n`;
+		result += `          <CalendarIcon class="ml-auto h-4 w-4 opacity-50" />\n`;
+		result += `        </Popover.Trigger>\n`;
+		result += `        <Popover.Content class="w-auto p-0" side="top">\n`;
+		result += `          <Calendar\n`;
+		result += `            {value}\n`;
+		result += `            bind:placeholder\n`;
+		result += `            minValue={new CalendarDate(1900, 1, 1)}\n`;
+		result += `            maxValue={today(getLocalTimeZone())}\n`;
+		result += `            calendarLabel="Date of birth"\n`;
+		result += `            initialFocus\n`;
+		result += `            onValueChange={(v) => ($formData.dob = v ? v.toString() : '')}\n`;
+		result += `          />\n`;
+		result += `        </Popover.Content>\n`;
+		result += `      </Popover.Root>\n`;
+		if (description) result += `      <Form.Description>${description}</Form.Description>\n`;
+		result += `      <Form.FieldErrors />\n`;
+		result += `      <input hidden value={$formData.${name}} name={attrs.name} />\n`;
+		result += `    </Form.Control>\n`;
+		result += `  </Form.Field>\n`;
 
 		return result;
 	};
@@ -170,16 +202,14 @@
 	};
 
 	const getFieldComponent = (field: FormField) => {
-		const { name, description, label, type } = field;
-
-		let result = `\n  <Form.Field {form} name="${name}">`;
-		result += '\n    <Form.Control let:attrs>';
-		result += `\n      <Form.Label>${label}</Form.Label>`;
-		result += `\n      ${fieldToComponent[type](field)}`;
-		result += '\n    </Form.Control>';
-		if (description) result += `\n    <Description>${description}</Description>`;
-		result += '\n    <Form.FieldErrors />';
-		result += '\n  </Form.Field>';
+		// let result = `\n  <Form.Field {form} name="${name}">`;
+		// result += '\n    <Form.Control let:attrs>';
+		// result += `\n      <Form.Label>${label}</Form.Label>`;
+		let result = `${fieldToComponent[field.type](field)}`;
+		// result += '\n    </Form.Control>';
+		// if (description) result += `\n    <Form.Description>${description}</Form.Description>`;
+		// result += '\n    <Form.FieldErrors />';
+		// result += '\n  </Form.Field>';
 
 		return result;
 	};
@@ -194,18 +224,48 @@
 			'  import * as Form from "$lib/components/ui/form";'
 		]);
 
-		// 'checkbox' | 'combobox' | 'datepicker' | 'input' | 'select' | 'slider' | 'switch' | 'textarea'
+		const code = new Set([
+			'  let { data } = $props();\n',
+			'  const form = superForm(data.form, {',
+			'    validators: zodClient(schema),',
+			'  });',
+			'  const { form: formData, enhance } = form;\n'
+		]);
+
 		if (form.fields.some(({ type }) => type === 'checkbox'))
 			imports.add('  import { Checkbox } from "$lib/components/ui/checkbox";');
 
 		if (form.fields.some(({ type }) => type === 'combobox')) {
 			imports.add('  import * as Command from "$lib/components/ui/command";');
 			imports.add('  import * as Popover from "$lib/components/ui/popover";');
+			imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
+			imports.add('  import { cn } from "$lib/utils";');
+			imports.add('  import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";');
+			imports.add('  import Check from "lucide-svelte/icons/check";');
+			imports.add('  import { tick } from "svelte"');
+
+			code.add('  let open = $state(false);\n');
+			code.add('  // We want to refocus the trigger button when the user selects an item from the list');
+			code.add('  // so users can continue navigating the rest of the form with the keyboard.');
+			code.add('  function closeAndFocusTrigger(triggerId: string) {');
+			code.add('    open = false;');
+			code.add('    tick().then(() => document.getElementById(triggerId)?.focus());');
+			code.add('  }');
 		}
 
 		if (form.fields.some(({ type }) => type === 'datepicker')) {
 			imports.add('  import { Calendar } from "$lib/components/ui/calendar";'); // or range calendar
 			imports.add('  import * as Popover from "$lib/components/ui/popover";');
+			imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
+			imports.add('  import { cn } from "$lib/utils";');
+			imports.add('  import CalendarIcon from "lucide-svelte/icons/calendar";');
+			imports.add(
+				'  import { CalendarDate, DateFormatter, getLocalTimeZone, parseDate, today } from "@internationalized/date";'
+			);
+
+			code.add('  const df = new DateFormatter("en-US", { dateStyle: "long" });');
+			code.add('  let placeholder = $state(today(getLocalTimeZone()));');
+			code.add('  let value = $derived($formData.dob ? parseDate($formData.dob) : undefined);');
 		}
 
 		if (form.fields.some(({ type }) => type === 'input'))
@@ -223,21 +283,14 @@
 		if (form.fields.some(({ type }) => type === 'textarea'))
 			imports.add('  import { Textarea } from "$lib/components/ui/textarea";');
 
-		result += Array.from(imports).join('\n') + '\n';
+		result += Array.from(imports).join('\n') + '\n\n';
+		result += Array.from(code).join('\n') + '\n';
+		result += '<\/script>\n\n'; // prettier-ignore
 
-		result += '\n  let { data } = $props();\n';
-
-		result += '\n  const form = superForm(data.form, {';
-		result += '\n    validators: zodClient(schema),';
-		result += '\n  });';
-
-		result += '\n  const { form: formData, enhance } = form;';
-		result += '\n<\/script>\n'; // prettier-ignore
-
-		result += '\n<form method="POST" use:enhance>';
-		result += form.fields.map((field) => getFieldComponent(field));
-		result += '\n  <Form.Button>Submit</Form.Button>';
-		result += '\n</form>';
+		result += '<form method="POST" use:enhance>\n';
+		result += form.fields.map((field) => getFieldComponent(field)).join('');
+		result += '  <Form.Button>Submit</Form.Button>\n';
+		result += '</form>\n';
 
 		return result;
 	});
@@ -302,7 +355,7 @@
 					<Tabs.Content value="page">
 						<Highlight language={typescript} code={pageCode} let:highlighted>
 							<CopyButton code={pageCode} />
-							<LineNumbers {highlighted} hideBorder />
+							<LineNumbers {highlighted} hideBorder wrapLines />
 						</Highlight>
 					</Tabs.Content>
 					<Tabs.Content value="server">
