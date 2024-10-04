@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
+
 	import Clipboard from 'lucide-svelte/icons/clipboard';
 	import ClipboardCheck from 'lucide-svelte/icons/clipboard-check';
 
@@ -16,9 +18,11 @@
 		variant="secondary"
 		size="icon"
 		on:click={() => {
+			if (isCopying) return;
 			isCopying = true;
 			navigator.clipboard.writeText(code);
 			setTimeout(() => (isCopying = false), 1000);
+			toast.success('Source code copied to clipboard');
 		}}
 	>
 		{#if isCopying}
