@@ -4,4 +4,6 @@
 	let { children } = $props();
 </script>
 
-{@render children()}
+<div class="mx-16 grid min-h-[100dvh] grid-rows-[auto_1fr_auto]">
+	{@render children()}
+</div>

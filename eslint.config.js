@@ -25,6 +25,11 @@ export default [
 			parserOptions: {
 				parser: ts.parser
 			}
+		},
+		rules: {
+			// TODO delete this line when the following PR will be merged
+			// https://github.com/sveltejs/eslint-plugin-svelte/issues/348
+			'@typescript-eslint/no-unused-vars': ['warn', { varsIgnorePattern: '^\\$\\$(Props|Events|Slots)$' }]
 		}
 	},
 	{
