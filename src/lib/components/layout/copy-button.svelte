@@ -12,7 +12,7 @@
 
 <div class="relative">
 	<Button
-		class="absolute right-2 top-2 z-[100] size-6"
+		class="absolute right-2 top-2 z-[10] size-6"
 		variant="secondary"
 		size="icon"
 		on:click={() => {

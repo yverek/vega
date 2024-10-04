@@ -13,10 +13,9 @@
 
 	type FormFieldItem = {
 		field: FormField;
-		index: number;
 	};
 
-	let { field, index }: FormFieldItem = $props();
+	let { field }: FormFieldItem = $props();
 </script>
 
 <div class="mt-1.5 flex w-full items-center justify-start gap-1 rounded-xl border px-3 py-1.5">
@@ -24,28 +23,28 @@
 	<div class="grid w-full grid-cols-6 items-center gap-2">
 		<div class="col-span-2">
 			<Input
-				value={field.label}
-				on:change={(e) => form.updateField(index, { label: (e.target as HTMLInputElement).value })}
-				placeholder="Enter label"
+				value={field.name}
+				on:change={(e) => form.updateField({ ...field, name: (e.target as HTMLInputElement).value })}
+				placeholder="Enter name"
 			/>
 		</div>
 		<div class="col-span-2">
 			<Input
-				value={field.description}
-				on:change={(e) => form.updateField(index, { description: (e.target as HTMLInputElement).value })}
-				placeholder="Enter description"
+				value={field.label}
+				on:change={(e) => form.updateField({ ...field, label: (e.target as HTMLInputElement).value })}
+				placeholder="Enter label"
 			/>
 		</div>
 		<div class="col-span-1 pl-6">
 			<Checkbox
 				checked={field.required}
-				onCheckedChange={(checked) => form.updateField(index, { required: !!checked })}
+				onCheckedChange={(checked) => form.updateField({ ...field, required: !!checked })}
 			/>
 		</div>
 		<div class="col-span-1 pl-6">
 			<Checkbox
 				checked={field.disabled}
-				onCheckedChange={(checked) => form.updateField(index, { disabled: !!checked })}
+				onCheckedChange={(checked) => form.updateField({ ...field, disabled: !!checked })}
 			/>
 		</div>
 	</div>
@@ -55,14 +54,13 @@
 			variant="ghost"
 			size="icon"
 			on:click={() => {
-				dialog.fieldIndex = index;
 				dialog.field = field;
 				dialog.isOpen = true;
 			}}
 		>
 			<Pencil />
 		</Button>
-		<Button variant="ghost" size="icon" on:click={() => form.removeField(index)}>
+		<Button variant="ghost" size="icon" on:click={() => form.removeField(field.id)}>
 			<Trash2 />
 		</Button>
 	</div>

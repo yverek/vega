@@ -26,7 +26,7 @@
 					id="name"
 					value={dialog.field.name}
 					class="col-span-3"
-					on:change={(e) => form.updateField(dialog.fieldIndex, { name: (e.target as HTMLInputElement).value })}
+					on:change={(e) => form.updateField({ ...dialog.field, name: (e.target as HTMLInputElement).value })}
 				/>
 			</div>
 			<div class="grid grid-cols-4 items-center gap-4">
@@ -35,7 +35,7 @@
 					id="label"
 					value={dialog.field.label}
 					class="col-span-3"
-					on:change={(e) => form.updateField(dialog.fieldIndex, { label: (e.target as HTMLInputElement).value })}
+					on:change={(e) => form.updateField({ ...dialog.field, label: (e.target as HTMLInputElement).value })}
 				/>
 			</div>
 			<div class="grid grid-cols-4 items-center gap-4">
@@ -44,7 +44,7 @@
 					id="description"
 					value={dialog.field.description}
 					class="col-span-3"
-					on:change={(e) => form.updateField(dialog.fieldIndex, { description: (e.target as HTMLInputElement).value })}
+					on:change={(e) => form.updateField({ ...dialog.field, description: (e.target as HTMLInputElement).value })}
 				/>
 			</div>
 			<div class="grid grid-cols-4 items-center gap-4">
@@ -52,7 +52,7 @@
 				<Checkbox
 					id="required"
 					checked={dialog.field.required}
-					onCheckedChange={(checked) => form.updateField(dialog.fieldIndex, { required: checked as boolean })}
+					onCheckedChange={(checked) => form.updateField({ ...dialog.field, required: checked as boolean })}
 				/>
 			</div>
 			<div class="grid grid-cols-4 items-center gap-4">
@@ -60,7 +60,7 @@
 				<Checkbox
 					id="disabled"
 					checked={dialog.field.disabled}
-					onCheckedChange={(checked) => form.updateField(dialog.fieldIndex, { disabled: checked as boolean })}
+					onCheckedChange={(checked) => form.updateField({ ...dialog.field, disabled: checked as boolean })}
 				/>
 			</div>
 		</div>

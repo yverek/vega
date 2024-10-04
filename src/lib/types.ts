@@ -1,6 +1,7 @@
 export type fieldTypes = 'checkbox' | 'combobox' | 'datepicker' | 'input' | 'select' | 'slider' | 'switch' | 'textarea';
 
 export type FormField = {
+	id: number;
 	type: fieldTypes;
 	name: string;
 	label: string;

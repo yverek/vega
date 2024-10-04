@@ -1,4 +1,4 @@
-import type { FormField } from '$lib/types';
+import type { fieldTypes, FormField } from '$lib/types';
 
 export class Form {
 	#fields = $state<FormField[]>([]);
@@ -7,14 +7,21 @@ export class Form {
 		return this.#fields;
 	}
 
-	addField(type: string) {
+	set fields(fields: FormField[]) {
+		this.#fields = fields;
+	}
+
+	addField(type: fieldTypes) {
+		const randomValue = window.crypto.getRandomValues(new Uint32Array(1))[0];
+
 		const newField: FormField = {
-			type,
+			id: randomValue,
+			type: type,
 			label: `New ${type}`,
 			value: '',
 			checked: true,
-			name: `name_${this.#fields.length + 1}`,
-			placeholder: 'Enter Placeholder',
+			name: `${type}_${randomValue}`,
+			placeholder: `Enter ${type} placeholder`,
 			description: '',
 			required: true,
 			disabled: false,
@@ -26,15 +33,17 @@ export class Form {
 		this.#fields.push(newField);
 	}
 
-	updateField(index: number, data: Partial<FormField>) {
+	updateField(data: Partial<Omit<FormField, 'id'>> & Pick<FormField, 'id'>) {
+		const index = this.#fields.map((f) => f.id).indexOf(data.id);
+
 		this.#fields[index] = {
 			...this.#fields[index],
 			...data
 		};
 	}
 
-	removeField(index: number) {
-		this.#fields = this.#fields.filter((_, i) => i !== index);
+	removeField(id: number) {
+		this.#fields = this.#fields.filter((f) => f.id !== id);
 	}
 }
 

@@ -2,7 +2,6 @@ import type { FormField } from '$lib/types';
 
 export class Dialog {
 	#field = $state({} as FormField);
-	#fieldIndex = $state(0);
 	#isOpen = $state(false);
 
 	get isOpen() {
@@ -19,14 +18,6 @@ export class Dialog {
 
 	set field(field: FormField) {
 		this.#field = field;
-	}
-
-	get fieldIndex() {
-		return this.#fieldIndex;
-	}
-
-	set fieldIndex(index: number) {
-		this.#fieldIndex = index;
 	}
 }
 
