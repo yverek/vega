@@ -6,6 +6,7 @@
 	import * as Tabs from '$lib/components/ui/tabs';
 	import { form } from '$lib/state/form.svelte';
 	import type { FormField } from '$lib/types';
+	import CopyButton from '../layout/copy-button.svelte';
 
 	const zodBoolean = (field: FormField) => {
 		const isRequired = field.required ? `{ required_error: "${field.label} is required"}` : '';
@@ -53,16 +54,6 @@
 		switch: (field: FormField) => zodBoolean(field),
 		textarea: (field: FormField) => zodString(field)
 	};
-
-	let schema = $derived.by(() => {
-		let result = 'import { z } from "zod";\n\n';
-
-		const zodFields = form.fields.map((field) => `  ${field.name}: ${fieldToZod[field.type](field)}`);
-
-		result += `export const schema = z.object({\n${zodFields.join('')}})`;
-
-		return result;
-	});
 
 	const checkboxComponent = ({ name, disabled }: FormField) => {
 		const isDisabled = disabled ? '{disabled} ' : '';
@@ -193,7 +184,7 @@
 		return result;
 	};
 
-	let page = $derived.by(() => {
+	let pageCode = $derived.by(() => {
 		let result = '<script lang="ts">\n';
 
 		const imports = new Set([
@@ -251,7 +242,7 @@
 		return result;
 	});
 
-	let server = $derived.by(() => {
+	let serverCode = $derived.by(() => {
 		const imports = new Set([
 			'import { superValidate } from "sveltekit-superforms";',
 			'import { zod } from "sveltekit-superforms/adapters";',
@@ -261,11 +252,21 @@
 
 		let result = Array.from(imports).join('\n') + '\n';
 
-		result += '\n export const load: PageServerLoad = async () => {';
-		result += '\n   return {';
-		result += '\n     form: await superValidate(zod(schema)),';
-		result += '\n   };';
-		result += '\n };';
+		result += '\nexport const load: PageServerLoad = async () => {';
+		result += '\n  return {';
+		result += '\n    form: await superValidate(zod(schema)),';
+		result += '\n  };';
+		result += '\n};';
+
+		return result;
+	});
+
+	let schemaCode = $derived.by(() => {
+		let result = 'import { z } from "zod";\n\n';
+
+		const zodFields = form.fields.map((field) => `  ${field.name}: ${fieldToZod[field.type](field)}`);
+
+		result += `export const schema = z.object({\n${zodFields.join('')}})`;
 
 		return result;
 	});
@@ -299,17 +300,20 @@
 						<Tabs.Trigger value="schema">schema.ts</Tabs.Trigger>
 					</Tabs.List>
 					<Tabs.Content value="page">
-						<Highlight language={typescript} code={page} let:highlighted>
+						<Highlight language={typescript} code={pageCode} let:highlighted>
+							<CopyButton code={pageCode} />
 							<LineNumbers {highlighted} hideBorder />
 						</Highlight>
 					</Tabs.Content>
 					<Tabs.Content value="server">
-						<Highlight language={typescript} code={server} let:highlighted>
+						<Highlight language={typescript} code={serverCode} let:highlighted>
+							<CopyButton code={serverCode} />
 							<LineNumbers {highlighted} hideBorder />
 						</Highlight>
 					</Tabs.Content>
 					<Tabs.Content value="schema">
-						<Highlight language={typescript} code={schema} let:highlighted>
+						<Highlight language={typescript} code={schemaCode} let:highlighted>
+							<CopyButton code={schemaCode} />
 							<LineNumbers {highlighted} hideBorder />
 						</Highlight>
 					</Tabs.Content>
