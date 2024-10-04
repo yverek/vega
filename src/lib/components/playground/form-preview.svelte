@@ -9,13 +9,13 @@
 	import CopyButton from '../layout/copy-button.svelte';
 
 	const zodBoolean = (field: FormField) => {
-		const isRequired = field.required ? `{ required_error: "${field.label} is required"}` : '';
+		const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		return `z.boolean(${isRequired}),\n`;
 	};
 
 	const zodNumber = (field: FormField) => {
-		const isRequired = field.required ? `{ required_error: "${field.label} is required"}` : '';
+		const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		let res = `z.number(${isRequired}),\n`;
 
@@ -25,7 +25,7 @@
 	};
 
 	const zodString = (field: FormField) => {
-		const isRequired = field.required ? `{ required_error: "${field.label} is required"}` : '';
+		const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		let res = `z.string(${isRequired}),\n`;
 
@@ -35,7 +35,7 @@
 	};
 
 	const zodDate = (field: FormField) => {
-		const isRequired = field.required ? `{ required_error: "${field.label} is required"}` : '';
+		const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		let res = `z.date(${isRequired}),\n`;
 
@@ -143,7 +143,7 @@
 		const isDisabled = disabled ? '{disabled} ' : '';
 
 		// TODO change this values
-		return `<Slider {...attrs} value={[33]} max={100} step={1} bind:value={$formData.${name}} ${isDisabled}/>`;
+		return `<Slider {...attrs} bind:value={$formData.${name}} max={100} step={1} ${isDisabled}/>`;
 	};
 
 	const switchComponent = ({ name, disabled }: FormField) => {
@@ -174,7 +174,7 @@
 
 		let result = `\n  <Form.Field {form} name="${name}">`;
 		result += '\n    <Form.Control let:attrs>';
-		result += `\n      <Form.Label>${label}</Label>`;
+		result += `\n      <Form.Label>${label}</Form.Label>`;
 		result += `\n      ${fieldToComponent[type](field)}`;
 		result += '\n    </Form.Control>';
 		if (description) result += `\n    <Description>${description}</Description>`;
@@ -236,7 +236,7 @@
 
 		result += '\n<form method="POST" use:enhance>';
 		result += form.fields.map((field) => getFieldComponent(field));
-		result += '\n  <Form.Button>Submit</button>';
+		result += '\n  <Form.Button>Submit</Form.Button>';
 		result += '\n</form>';
 
 		return result;
@@ -256,7 +256,7 @@
 		result += '\n  return {';
 		result += '\n    form: await superValidate(zod(schema)),';
 		result += '\n  };';
-		result += '\n};';
+		result += '\n};\n';
 
 		return result;
 	});
@@ -266,7 +266,7 @@
 
 		const zodFields = form.fields.map((field) => `  ${field.name}: ${fieldToZod[field.type](field)}`);
 
-		result += `export const schema = z.object({\n${zodFields.join('')}})`;
+		result += `export const schema = z.object({\n${zodFields.join('')}});\n`;
 
 		return result;
 	});
