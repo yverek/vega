@@ -57,14 +57,17 @@
 
 	const checkboxComponent = ({ name, label, description, disabled }: FormField) => {
 		let result = '';
-		const isDisabled = disabled ? '{disabled} ' : '';
+		const isDisabled = disabled ? 'disabled ' : '';
 
-		result += `  <Form.Field {form} name="${name}" class="my-4 flex items-center gap-2">\n`;
+		result += `  <Form.Field {form} name="${name}" class="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">\n`;
 		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Checkbox {...attrs} bind:checked={$formData.agree} ${isDisabled}/>\n`;
-		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `    </Form.Control>\n`;
+		result += `      <Checkbox {...attrs} bind:checked={$formData.${name}} ${isDisabled}/>\n`;
+		result += `      <div class="space-y-1 leading-none">\n`;
+		result += `        <Form.Label>${label}</Form.Label>\n`;
 		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		result += `      </div>\n`;
+		result += `      <input name={attrs.name} value={$formData.${name}} hidden />\n`;
+		result += `    </Form.Control>\n`;
 		result += `    <Form.FieldErrors />\n`;
 		result += `  </Form.Field>\n`;
 
@@ -73,7 +76,6 @@
 
 	const comboboxComponent = ({ name, label, description, disabled }: FormField) => {
 		let result = '';
-		const isDisabled = disabled ? '{disabled} ' : ''; // TODO check if you can disable popover, if yes add it
 
 		// TODO this component is almost done, the last thing to do is to add {label, value} array to schema.ts
 		// TODO add button in dialog to build this array with user data
@@ -81,7 +83,16 @@
 		result += `    <Popover.Root bind:open let:ids>\n`;
 		result += `      <Form.Control let:attrs>\n`;
 		result += `        <Form.Label>${label}</Form.Label>\n`;
-		result += `        <Popover.Trigger class={cn(buttonVariants({ variant: "outline" }), "w-[200px] justify-between", !$formData.${name} && "text-muted-foreground")} role="combobox" {...attrs}>\n`;
+		result += `        <Popover.Trigger\n`;
+		result += `          {...attrs}\n`;
+		result += `          role="combobox"\n`;
+		result += `          class={cn(\n`;
+		result += `            buttonVariants({ variant: 'outline' }),\n`;
+		result += `            'w-[200px] justify-between',\n`;
+		result += `            !$formData.${name} && 'text-muted-foreground'\n`;
+		result += `          )}\n`;
+		if (disabled) result += `          disabled\n`;
+		result += `        >\n`;
 		result += `          {languages.find((f) => f.value === $formData.${name})?.label ?? "Select language"}\n`;
 		result += `          <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />\n`;
 		result += `        </Popover.Trigger>\n`;
@@ -115,13 +126,20 @@
 
 	const datepickerComponent = ({ name, label, description, disabled }: FormField) => {
 		let result = '';
-		const isDisabled = disabled ? '{disabled} ' : ''; // TODO check if you can disable popover, if yes add it
 
 		result += `  <Form.Field {form} name="${name}" class="flex flex-col">\n`;
 		result += `    <Form.Control let:attrs>\n`;
 		result += `      <Form.Label>${label}</Form.Label>\n`;
 		result += `      <Popover.Root>\n`;
-		result += `        <Popover.Trigger {...attrs} class={cn(buttonVariants({ variant: "outline" }), "w-[280px] justify-start pl-4 text-left font-normal", !value && "text-muted-foreground")}>\n`;
+		result += `        <Popover.Trigger\n`;
+		result += `          {...attrs}\n`;
+		result += `          class={cn(\n`;
+		result += `            buttonVariants({ variant: 'outline' }),\n`;
+		result += `            'w-[280px] justify-start pl-4 text-left font-normal',\n`;
+		result += `            !value && 'text-muted-foreground'\n`;
+		result += `          )}\n`;
+		if (disabled) result += `          disabled\n`;
+		result += `        >\n`;
 		result += `          {value ? df.format(value.toDate(getLocalTimeZone())) : "Pick a date"}\n`;
 		result += `          <CalendarIcon class="ml-auto h-4 w-4 opacity-50" />\n`;
 		result += `        </Popover.Trigger>\n`;
@@ -148,7 +166,7 @@
 
 	const inputComponent = ({ name, label, description, disabled }: FormField) => {
 		let result = '';
-		const isDisabled = disabled ? '{disabled} ' : '';
+		const isDisabled = disabled ? 'disabled ' : '';
 
 		// TODO add type="${type}" to this field
 		result += `  <Form.Field {form} name="${name}">\n`;
@@ -165,13 +183,16 @@
 
 	const selectComponent = ({ name, label, description, placeholder, disabled }: FormField) => {
 		let result = '';
-		const isDisabled = disabled ? '{disabled} ' : ''; // TODO check if you can disable popover, if yes add it
 
 		// TODO replace 3 select item with each loops from user input
 		result += `  <Form.Field {form} name="${name}">\n`;
 		result += `    <Form.Control let:attrs>\n`;
 		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Select.Root selected={selectedEmail} onSelectedChange={(v) => v && ($formData.${name} = v.value)}>\n`;
+		result += `      <Select.Root\n`;
+		result += `        selected={selectedEmail}\n`;
+		result += `        onSelectedChange={(v) => v && ($formData.${name} = v.value)}\n`;
+		if (disabled) result += `        disabled\n`;
+		result += `      >\n`;
 		result += `        <Select.Trigger {...attrs}>\n`;
 		result += `          <Select.Value placeholder="${placeholder}" />\n`;
 		result += `        </Select.Trigger>\n`;
@@ -192,14 +213,14 @@
 
 	const sliderComponent = ({ name, label, description, disabled }: FormField) => {
 		let result = '';
-		const isDisabled = disabled ? '{disabled} ' : '';
+		const isDisabled = disabled ? 'disabled ' : '';
 
 		// TODO replace min, max, step values from user input
 		// TODO this must be fixed because bind:values doesn't work properly
 		result += `  <Form.Field {form} name="${name}">\n`;
 		result += `    <Form.Control let:attrs>\n`;
 		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Slider {...attrs} bind:value={[$formData.${name}]} min={0} max={100} step={1} ${isDisabled}/>\n`;
+		result += `      <Slider {...attrs} value={[$formData.${name}]} min={0} max={100} step={1} ${isDisabled}/>\n`;
 		result += `    </Form.Control>\n`;
 		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
 		result += `    <Form.FieldErrors />\n`;
@@ -218,7 +239,7 @@
 		result += `        <Form.Label>${label}</Form.Label>\n`;
 		if (description) result += `        <Form.Description>${description}</Form.Description>\n`;
 		result += `      </div>\n`;
-		result += `      <Switch includeInput {...attrs} bind:checked={$formData.${name}} ${isDisabled}/>\n`;
+		result += `      <Switch {...attrs} includeInput bind:checked={$formData.${name}} ${isDisabled}/>\n`;
 		result += `    </Form.Control>\n`;
 		result += `  </Form.Field>\n`;
 
@@ -293,7 +314,7 @@
 			code.add('  function closeAndFocusTrigger(triggerId: string) {');
 			code.add('    open = false;');
 			code.add('    tick().then(() => document.getElementById(triggerId)?.focus());');
-			code.add('  }\nS');
+			code.add('  }\n');
 		}
 
 		if (form.fields.some(({ type }) => type === 'datepicker')) {
