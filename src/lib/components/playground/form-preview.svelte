@@ -146,48 +146,104 @@
 		return result;
 	};
 
-	const inputComponent = ({ type, name, disabled }: FormField) => {
+	const inputComponent = ({ name, label, description, disabled }: FormField) => {
+		let result = '';
 		const isDisabled = disabled ? '{disabled} ' : '';
 
-		// TODO change type because is wrong!
-		return `<Input {...attrs} type="${type}" bind:value={$formData.${name}} ${isDisabled}/>`;
-	};
-
-	const selectComponent = ({ name, placeholder, disabled }: FormField) => {
-		const isDisabled = disabled ? '{disabled} ' : '';
-
-		let result = `<Select.Root selected={selectedEmail} onSelectedChange={(v) => { v && ($formData.${name} = v.value)}}>`;
-		result += '\n        <Select.Trigger {...attrs}>';
-		result += '\n          <Select.Value placeholder="${placeholder}" />';
-		result += '\n        </Select.Trigger>';
-		result += '\n        <Select.Content>';
-		result += '\n          <Select.Item value="m@example.com" label="m@example.com" />';
-		result += '\n          <Select.Item value="m@google.com" label="m@google.com" />';
-		result += '\n          <Select.Item value="m@support.com" label="m@support.com" />';
-		result += '\n        </Select.Content>';
-		result += '\n      </Select.Root>';
-		result += `\n      <input hidden bind:value={$formData.${name}} name={attrs.name} />`;
+		// TODO add type="${type}" to this field
+		result += `  <Form.Field {form} name="${name}">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <Form.Label>${label}</Form.Label>\n`;
+		result += `      <Input {...attrs} bind:value={$formData.${name}} ${isDisabled}/>\n`;
+		result += `    </Form.Control>\n`;
+		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		result += `    <Form.FieldErrors />\n`;
+		result += `  </Form.Field>\n`;
 
 		return result;
 	};
 
-	const sliderComponent = ({ name, disabled }: FormField) => {
-		const isDisabled = disabled ? '{disabled} ' : '';
+	const selectComponent = ({ name, label, description, placeholder, disabled }: FormField) => {
+		let result = '';
+		const isDisabled = disabled ? '{disabled} ' : ''; // TODO check if you can disable popover, if yes add it
 
-		// TODO change this values
-		return `<Slider {...attrs} bind:value={$formData.${name}} max={100} step={1} ${isDisabled}/>`;
+		// TODO replace 3 select item with each loops from user input
+		result += `  <Form.Field {form} name="${name}">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <Form.Label>${label}</Form.Label>\n`;
+		result += `      <Select.Root selected={selectedEmail} onSelectedChange={(v) => v && ($formData.${name} = v.value)}>\n`;
+		result += `        <Select.Trigger {...attrs}>\n`;
+		result += `          <Select.Value placeholder="${placeholder}" />\n`;
+		result += `        </Select.Trigger>\n`;
+		result += `        <Select.Content>\n`;
+		result += `          <Select.Item value="m@example.com" label="m@example.com" />\n`;
+		result += `          <Select.Item value="m@google.com" label="m@google.com" />\n`;
+		result += `          <Select.Item value="m@support.com" label="m@support.com" />\n`;
+		result += `        </Select.Content>\n`;
+		result += `      </Select.Root>\n`;
+		result += `      <input hidden bind:value={$formData.${name}} name={attrs.name} />\n`;
+		result += `    </Form.Control>\n`;
+		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		result += `    <Form.FieldErrors />\n`;
+		result += `  </Form.Field>\n`;
+
+		return result;
 	};
 
-	const switchComponent = ({ name, disabled }: FormField) => {
+	const sliderComponent = ({ name, label, description, disabled }: FormField) => {
+		let result = '';
 		const isDisabled = disabled ? '{disabled} ' : '';
 
-		return `<Switch {...attrs} bind:checked={$formData.${name}} ${isDisabled}/>`;
+		// TODO replace min, max, step values from user input
+		// TODO this must be fixed because bind:values doesn't work properly
+		result += `  <Form.Field {form} name="${name}">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <Form.Label>${label}</Form.Label>\n`;
+		result += `      <Slider {...attrs} bind:value={[$formData.${name}]} min={0} max={100} step={1} ${isDisabled}/>\n`;
+		result += `    </Form.Control>\n`;
+		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		result += `    <Form.FieldErrors />\n`;
+		result += `  </Form.Field>\n`;
+
+		return result;
 	};
 
-	const textareaComponent = ({ name, placeholder, disabled }: FormField) => {
-		const isDisabled = disabled ? '{disabled} ' : '';
+	const switchComponent = ({ name, label, description, disabled }: FormField) => {
+		let result = '';
+		const isDisabled = disabled ? 'disabled ' : '';
 
-		return `<Textarea {...attrs} placeholder="${placeholder}" bind:value={$formData.${name}} ${isDisabled}/>`;
+		result += `  <Form.Field {form} name="${name}" class="flex flex-row items-center justify-between rounded-lg border p-4">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <div class="space-y-0.5">\n`;
+		result += `        <Form.Label>${label}</Form.Label>\n`;
+		if (description) result += `        <Form.Description>${description}</Form.Description>\n`;
+		result += `      </div>\n`;
+		result += `      <Switch includeInput {...attrs} bind:checked={$formData.${name}} ${isDisabled}/>\n`;
+		result += `    </Form.Control>\n`;
+		result += `  </Form.Field>\n`;
+
+		return result;
+	};
+
+	const textareaComponent = ({ name, label, description, placeholder, disabled }: FormField) => {
+		let result = '';
+
+		result += `  <Form.Field {form} name="bio">\n`;
+		result += `    <Form.Control let:attrs>\n`;
+		result += `      <Form.Label>Bio</Form.Label>\n`;
+		result += `      <Textarea\n`;
+		result += `        {...attrs}\n`;
+		if (placeholder) result += `        placeholder="${placeholder}"\n`;
+		result += `        class="resize-none"\n`;
+		result += `        bind:value={$formData.${name}}\n`;
+		if (disabled) result += `        disabled\n`;
+		result += `      />\n`;
+		if (description) result += `      <Form.Description>${description}</Form.Description>\n`;
+		result += `    </Form.Control>\n`;
+		result += `    <Form.FieldErrors />\n`;
+		result += `  </Form.Field>\n`;
+
+		return result;
 	};
 
 	const fieldToComponent = {
@@ -199,19 +255,6 @@
 		slider: (field: FormField) => sliderComponent(field),
 		switch: (field: FormField) => switchComponent(field),
 		textarea: (field: FormField) => textareaComponent(field)
-	};
-
-	const getFieldComponent = (field: FormField) => {
-		// let result = `\n  <Form.Field {form} name="${name}">`;
-		// result += '\n    <Form.Control let:attrs>';
-		// result += `\n      <Form.Label>${label}</Form.Label>`;
-		let result = `${fieldToComponent[field.type](field)}`;
-		// result += '\n    </Form.Control>';
-		// if (description) result += `\n    <Form.Description>${description}</Form.Description>`;
-		// result += '\n    <Form.FieldErrors />';
-		// result += '\n  </Form.Field>';
-
-		return result;
 	};
 
 	let pageCode = $derived.by(() => {
@@ -250,7 +293,7 @@
 			code.add('  function closeAndFocusTrigger(triggerId: string) {');
 			code.add('    open = false;');
 			code.add('    tick().then(() => document.getElementById(triggerId)?.focus());');
-			code.add('  }');
+			code.add('  }\nS');
 		}
 
 		if (form.fields.some(({ type }) => type === 'datepicker')) {
@@ -265,14 +308,19 @@
 
 			code.add('  const df = new DateFormatter("en-US", { dateStyle: "long" });');
 			code.add('  let placeholder = $state(today(getLocalTimeZone()));');
-			code.add('  let value = $derived($formData.dob ? parseDate($formData.dob) : undefined);');
+			code.add('  let value = $derived($formData.dob ? parseDate($formData.dob) : undefined);\n');
 		}
 
 		if (form.fields.some(({ type }) => type === 'input'))
 			imports.add('  import { Input } from "$lib/components/ui/input";');
 
-		if (form.fields.some(({ type }) => type === 'select'))
+		if (form.fields.some(({ type }) => type === 'select')) {
 			imports.add('  import * as Select from "$lib/components/ui/select";');
+
+			code.add(
+				`  let selectedEmail = $derived($formData.email ? { label: $formData.email, value: $formData.email } : undefined);\n`
+			);
+		}
 
 		if (form.fields.some(({ type }) => type === 'slider'))
 			imports.add('  import { Slider } from "$lib/components/ui/slider";');
@@ -284,11 +332,11 @@
 			imports.add('  import { Textarea } from "$lib/components/ui/textarea";');
 
 		result += Array.from(imports).join('\n') + '\n\n';
-		result += Array.from(code).join('\n') + '\n';
+		result += Array.from(code).join('\n');
 		result += '<\/script>\n\n'; // prettier-ignore
 
-		result += '<form method="POST" use:enhance>\n';
-		result += form.fields.map((field) => getFieldComponent(field)).join('');
+		result += '<form method="POST" class="min-w-[500px] space-y-4" use:enhance>\n';
+		result += form.fields.map((field) => fieldToComponent[field.type](field)).join('');
 		result += '  <Form.Button>Submit</Form.Button>\n';
 		result += '</form>\n';
 
