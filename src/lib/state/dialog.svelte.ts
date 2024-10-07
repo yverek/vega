@@ -1,6 +1,6 @@
 import type { FormField } from '$lib/types';
 
-export class Dialog {
+export class DialogState {
 	#field = $state({} as FormField);
 	#isOpen = $state(false);
 
@@ -21,4 +21,4 @@ export class Dialog {
 	}
 }
 
-export const dialog = new Dialog();
+export const dialogState = new DialogState();

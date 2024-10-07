@@ -8,13 +8,10 @@
 	import Grip from 'lucide-svelte/icons/grip';
 
 	import type { FormField } from '$lib/types';
-	import { form } from '$lib/state/form.svelte';
-	import { dialog } from '$lib/state/dialog.svelte';
+	import { formState } from '$lib/state/form.svelte';
+	import { dialogState } from '$lib/state/dialog.svelte';
 
-	type FormFieldItem = {
-		field: FormField;
-	};
-
+	type FormFieldItem = { field: FormField };
 	let { field }: FormFieldItem = $props();
 </script>
 
@@ -24,27 +21,27 @@
 		<div class="col-span-2">
 			<Input
 				value={field.name}
-				on:change={(e) => form.updateField({ ...field, name: (e.target as HTMLInputElement).value })}
+				on:change={(e) => formState.updateField({ ...field, name: (e.target as HTMLInputElement).value })}
 				placeholder="Enter name"
 			/>
 		</div>
 		<div class="col-span-2">
 			<Input
 				value={field.label}
-				on:change={(e) => form.updateField({ ...field, label: (e.target as HTMLInputElement).value })}
+				on:change={(e) => formState.updateField({ ...field, label: (e.target as HTMLInputElement).value })}
 				placeholder="Enter label"
 			/>
 		</div>
 		<div class="col-span-1 pl-6">
 			<Checkbox
 				checked={field.required}
-				onCheckedChange={(checked) => form.updateField({ ...field, required: !!checked })}
+				onCheckedChange={(checked) => formState.updateField({ ...field, required: !!checked })}
 			/>
 		</div>
 		<div class="col-span-1 pl-6">
 			<Checkbox
 				checked={field.disabled}
-				onCheckedChange={(checked) => form.updateField({ ...field, disabled: !!checked })}
+				onCheckedChange={(checked) => formState.updateField({ ...field, disabled: !!checked })}
 			/>
 		</div>
 	</div>
@@ -54,13 +51,13 @@
 			variant="ghost"
 			size="icon"
 			on:click={() => {
-				dialog.field = field;
-				dialog.isOpen = true;
+				dialogState.field = field;
+				dialogState.isOpen = true;
 			}}
 		>
 			<Pencil />
 		</Button>
-		<Button variant="ghost" size="icon" on:click={() => form.removeField(field.id)}>
+		<Button variant="ghost" size="icon" on:click={() => formState.removeField(field.name)}>
 			<Trash2 />
 		</Button>
 	</div>

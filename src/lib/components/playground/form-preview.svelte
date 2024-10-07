@@ -1,12 +1,23 @@
 <script lang="ts">
+	import SuperDebug, { superForm } from 'sveltekit-superforms';
+	import { zodClient } from 'sveltekit-superforms/adapters';
 	import Highlight, { LineNumbers } from 'svelte-highlight';
 	import typescript from 'svelte-highlight/languages/typescript';
 	import githubDarkDimmed from 'svelte-highlight/styles/github-dark-dimmed';
 
+	import * as Form from '$lib/components/ui/form';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import { form } from '$lib/state/form.svelte';
+	import { formSchema, formState, type FormSchema, type ValidatedFormSchema } from '$lib/state/form.svelte';
 	import type { FormField } from '$lib/types';
 	import CopyButton from '../layout/copy-button.svelte';
+	import InputField from '../components/input-field.svelte';
+	import CheckboxField from '../components/checkbox-field.svelte';
+	import ComboboxField from '../components/combobox-field.svelte';
+	import DatepickerField from '../components/datepicker-field.svelte';
+	import SelectField from '../components/select-field.svelte';
+	import SliderField from '../components/slider-field.svelte';
+	import SwitchField from '../components/switch-field.svelte';
+	import TextareaField from '../components/textarea-field.svelte';
 
 	const zodBoolean = (field: FormField) => {
 		const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
@@ -64,7 +75,7 @@
 		result += `      <Checkbox {...attrs} bind:checked={$formData.${name}} ${isDisabled}/>\n`;
 		result += `      <div class="space-y-1 leading-none">\n`;
 		result += `        <Form.Label>${label}</Form.Label>\n`;
-		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
+		if (description) result += `        <Form.Description>${description}</Form.Description>\n`;
 		result += `      </div>\n`;
 		result += `      <input name={attrs.name} value={$formData.${name}} hidden />\n`;
 		result += `    </Form.Control>\n`;
@@ -251,7 +262,7 @@
 
 		result += `  <Form.Field {form} name="bio">\n`;
 		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Form.Label>Bio</Form.Label>\n`;
+		result += `      <Form.Label>${label}</Form.Label>\n`;
 		result += `      <Textarea\n`;
 		result += `        {...attrs}\n`;
 		if (placeholder) result += `        placeholder="${placeholder}"\n`;
@@ -296,10 +307,10 @@
 			'  const { form: formData, enhance } = form;\n'
 		]);
 
-		if (form.fields.some(({ type }) => type === 'checkbox'))
+		if (formState.fields.some(({ type }) => type === 'checkbox'))
 			imports.add('  import { Checkbox } from "$lib/components/ui/checkbox";');
 
-		if (form.fields.some(({ type }) => type === 'combobox')) {
+		if (formState.fields.some(({ type }) => type === 'combobox')) {
 			imports.add('  import * as Command from "$lib/components/ui/command";');
 			imports.add('  import * as Popover from "$lib/components/ui/popover";');
 			imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
@@ -317,7 +328,7 @@
 			code.add('  }\n');
 		}
 
-		if (form.fields.some(({ type }) => type === 'datepicker')) {
+		if (formState.fields.some(({ type }) => type === 'datepicker')) {
 			imports.add('  import { Calendar } from "$lib/components/ui/calendar";'); // or range calendar
 			imports.add('  import * as Popover from "$lib/components/ui/popover";');
 			imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
@@ -332,10 +343,10 @@
 			code.add('  let value = $derived($formData.dob ? parseDate($formData.dob) : undefined);\n');
 		}
 
-		if (form.fields.some(({ type }) => type === 'input'))
+		if (formState.fields.some(({ type }) => type === 'input'))
 			imports.add('  import { Input } from "$lib/components/ui/input";');
 
-		if (form.fields.some(({ type }) => type === 'select')) {
+		if (formState.fields.some(({ type }) => type === 'select')) {
 			imports.add('  import * as Select from "$lib/components/ui/select";');
 
 			code.add(
@@ -343,13 +354,13 @@
 			);
 		}
 
-		if (form.fields.some(({ type }) => type === 'slider'))
+		if (formState.fields.some(({ type }) => type === 'slider'))
 			imports.add('  import { Slider } from "$lib/components/ui/slider";');
 
-		if (form.fields.some(({ type }) => type === 'switch'))
+		if (formState.fields.some(({ type }) => type === 'switch'))
 			imports.add('  import { Switch } from "$lib/components/ui/switch";');
 
-		if (form.fields.some(({ type }) => type === 'textarea'))
+		if (formState.fields.some(({ type }) => type === 'textarea'))
 			imports.add('  import { Textarea } from "$lib/components/ui/textarea";');
 
 		result += Array.from(imports).join('\n') + '\n\n';
@@ -357,7 +368,7 @@
 		result += '<\/script>\n\n'; // prettier-ignore
 
 		result += '<form method="POST" class="min-w-[500px] space-y-4" use:enhance>\n';
-		result += form.fields.map((field) => fieldToComponent[field.type](field)).join('');
+		result += formState.fields.map((field) => fieldToComponent[field.type](field)).join('');
 		result += '  <Form.Button>Submit</Form.Button>\n';
 		result += '</form>\n';
 
@@ -386,12 +397,23 @@
 	let schemaCode = $derived.by(() => {
 		let result = 'import { z } from "zod";\n\n';
 
-		const zodFields = form.fields.map((field) => `  ${field.name}: ${fieldToZod[field.type](field)}`);
+		const zodFields = formState.fields.map((field) => `  ${field.name}: ${fieldToZod[field.type](field)}`);
 
 		result += `export const schema = z.object({\n${zodFields.join('')}});\n`;
 
 		return result;
 	});
+
+	type FormPreviewProps = { form: ValidatedFormSchema };
+	let { form }: FormPreviewProps = $props();
+
+	const previewForm = superForm(form, {
+		validators: zodClient(formSchema),
+		onSubmit: ({ formData }) => {
+			console.log('🚀 ~ formData:', formData);
+		}
+	});
+	const { form: formData, enhance } = previewForm;
 </script>
 
 <svelte:head>
@@ -405,8 +427,30 @@
 			<Tabs.Trigger value="code">Code</Tabs.Trigger>
 		</Tabs.List>
 		<Tabs.Content value="preview">
-			{#if form.fields.length > 0}
-				FormPreview
+			{#if formState.fields.length > 0}
+				<form method="POST" class="mx-auto my-8 max-w-[500px] space-y-4" use:enhance>
+					{#each formState.fields as field}
+						{#if field.type === 'checkbox'}
+							<CheckboxField {field} form={previewForm} {formData} />
+						{:else if field.type === 'combobox'}
+							<ComboboxField {field} form={previewForm} {formData} />
+						{:else if field.type === 'datepicker'}
+							<DatepickerField {field} form={previewForm} {formData} />
+						{:else if field.type === 'input'}
+							<InputField {field} form={previewForm} {formData} />
+						{:else if field.type === 'select'}
+							<SelectField {field} form={previewForm} {formData} />
+						{:else if field.type === 'slider'}
+							<SliderField {field} form={previewForm} {formData} />
+						{:else if field.type === 'switch'}
+							<SwitchField {field} form={previewForm} {formData} />
+						{:else if field.type === 'textarea'}
+							<TextareaField {field} form={previewForm} {formData} />
+						{/if}
+					{/each}
+					<Form.Button>Submit</Form.Button>
+					<SuperDebug data={formData} />
+				</form>
 			{:else}
 				<div class="flex h-[50vh] items-center justify-center">
 					<p>No form element selected yet.</p>
@@ -414,7 +458,7 @@
 			{/if}
 		</Tabs.Content>
 		<Tabs.Content value="code">
-			{#if form.fields.length > 0}
+			{#if formState.fields.length > 0}
 				<Tabs.Root value="page" class="w-full">
 					<Tabs.List class="mx-auto flex w-fit justify-center">
 						<Tabs.Trigger value="page">+page.svelte</Tabs.Trigger>

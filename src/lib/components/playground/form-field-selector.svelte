@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/ui/button';
-	import { form } from '$lib/state/form.svelte';
+	import { formState } from '$lib/state/form.svelte';
 	import type { fieldTypes } from '$lib/types';
 
 	const fields: fieldTypes[] = [
@@ -18,7 +18,7 @@
 <div class="mb-8 flex justify-center gap-3">
 	{#each fields as field}
 		<div class="flex items-center gap-1">
-			<Button variant="outline" on:click={() => form.addField(field)} class="text-md rounded-full" size="lg">
+			<Button variant="outline" on:click={() => formState.addField(field)} class="text-md rounded-full" size="lg">
 				{field}
 			</Button>
 		</div>
