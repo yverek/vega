@@ -9,9 +9,9 @@
 	type InputProps = {
 		field: FormField;
 		form: SuperForm<FormSchema>;
-		formData: SuperFormData<FormSchema>;
 	};
-	let { field, form, formData }: InputProps = $props();
+	let { field, form }: InputProps = $props();
+	const { form: formData } = form;
 </script>
 
 <Form.Field {form} name={field.name} class="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">

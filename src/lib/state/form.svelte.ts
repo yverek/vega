@@ -1,12 +1,15 @@
-import type { fieldTypes, FormField } from '$lib/types';
+import type { BaseField, FieldTypes, FormField } from '$lib/types';
 import type { Infer, SuperValidated } from 'sveltekit-superforms';
-import { z } from 'zod';
+import { z, type ZodTypeAny } from 'zod';
 
 type ZodSchema = Record<string, z.ZodTypeAny>;
 
 export class FormState {
 	#fields = $state<FormField[]>([]);
 	#schema = $state<ZodSchema>({});
+	#zodSchema = $derived(z.object(this.#schema));
+	#show = $state(true);
+
 	#fieldToZod = {
 		checkbox: (field: FormField) => this.zodBoolean(field),
 		combobox: (field: FormField) => this.zodString(field),
@@ -34,15 +37,25 @@ export class FormState {
 		this.#schema = schema;
 	}
 
-	zodBoolean(field: FormField) {
-		console.log('🚀 ~ FormState ~ field:', field);
-		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
+	get zodSchema() {
+		return this.#zodSchema;
+	}
 
-		return z.boolean();
+	get show() {
+		return this.#show;
+	}
+
+	zodBoolean(field: FormField) {
+		let code: ZodTypeAny = z.boolean();
+
+		if (!field.required) code = code.optional();
+		if (field.defaultValue) code = code.default(field.defaultValue);
+
+		return code;
 	}
 
 	zodNumber(field: FormField) {
-		console.log('🚀 ~ FormState ~ field:', field);
+		// console.log('🚀 ~ FormState ~ field:', field);
 		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		// let res = `z.number(${isRequired}),\n`;
@@ -53,59 +66,70 @@ export class FormState {
 	}
 
 	zodString(field: FormField) {
-		console.log('🚀 ~ FormState ~ field:', field);
+		// console.log('🚀 ~ FormState ~ field:', field);
 		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		// let res = `z.string(${isRequired}),\n`;
 
 		// TODO add options like url(), ip() ecc
 
-		return z.string();
+		return z.string().min(2).max(5);
 	}
 
 	zodDate(field: FormField) {
-		console.log('🚀 ~ FormState ~ field:', field);
+		// console.log('🚀 ~ FormState ~ field:', field);
 		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		// let res = `z.date(${isRequired}),\n`;
 
 		// TODO add options like url(), ip() ecc
 
-		return z.date();
+		return z.date().default(new Date());
 	}
 
-	addField(type: fieldTypes) {
-		const randomValue = window.crypto.getRandomValues(new Uint32Array(1))[0];
+	addField(type: FieldTypes) {
+		this.#show = false;
+		const id = window.crypto.getRandomValues(new Uint32Array(1))[0];
 
-		const newField: FormField = {
-			id: randomValue,
-			type: type,
+		let newField!: FormField;
+
+		const baseField: BaseField = {
+			id,
 			label: `New ${type}`,
-			value: '',
-			checked: true,
-			name: `${type}_${randomValue}`,
-			placeholder: `Enter ${type} placeholder`,
+			name: `${type}_${id}`,
+			// placeholder: `Enter ${type} placeholder`,
 			description: '',
 			required: true,
-			disabled: false,
-			onChange: () => {},
-			setValue: () => {},
-			onSelect: () => {}
+			disabled: false
 		};
+
+		if (type === 'checkbox') newField = { ...baseField, type: 'checkbox', defaultValue: false };
+		if (type === 'combobox') newField = { ...baseField, type: 'combobox', defaultValue: '' };
+		if (type === 'datepicker') newField = { ...baseField, type: 'datepicker', defaultValue: '' };
+		if (type === 'input') newField = { ...baseField, type: 'input', defaultValue: '' };
+		if (type === 'select') newField = { ...baseField, type: 'select', defaultValue: '' };
+		if (type === 'slider') newField = { ...baseField, type: 'slider', defaultValue: '' };
+		if (type === 'switch') newField = { ...baseField, type: 'switch', defaultValue: false };
+		if (type === 'textarea') newField = { ...baseField, type: 'textarea', defaultValue: '' };
 
 		this.#fields.push(newField);
 		this.#schema[newField.name] = this.#fieldToZod[type](newField);
+		this.#show = true;
 	}
 
-	updateField(data: FormField) {
-		const index = this.#fields.map((f) => f.name).indexOf(data.name);
+	updateField(oldName: string, data: FormField) {
+		this.#show = false;
+		const index = this.#fields.map((f) => f.name).indexOf(oldName);
 
 		this.#fields[index] = {
 			...this.#fields[index],
 			...data
 		};
 
+		delete this.#schema[oldName];
 		this.#schema[data.name] = this.#fieldToZod[data.type](data);
+
+		this.#show = true;
 	}
 
 	removeField(name: string) {
@@ -116,6 +140,5 @@ export class FormState {
 
 export const formState = new FormState();
 
-export const formSchema = z.object(formState.schema);
-export type FormSchema = Infer<typeof formSchema>;
+export type FormSchema = Infer<typeof formState.zodSchema>;
 export type ValidatedFormSchema = SuperValidated<FormSchema>;

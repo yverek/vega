@@ -12,7 +12,7 @@
 	let isCopying = $state(false);
 </script>
 
-<div class="relative">
+<div class="relative" id="copy-button">
 	<Button
 		class="absolute right-2 top-2 z-[10] size-6"
 		variant="secondary"

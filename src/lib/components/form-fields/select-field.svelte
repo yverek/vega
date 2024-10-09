@@ -4,15 +4,15 @@
 	import type { FormField } from '$lib/types';
 	import * as Form from '$lib/components/ui/form';
 	import * as Select from '$lib/components/ui/select';
-	import { Input } from '$lib/components/ui/input';
+	// import { Input } from '$lib/components/ui/input';
 	import type { FormSchema } from '$lib/state/form.svelte';
 
 	type InputProps = {
 		field: FormField;
 		form: SuperForm<FormSchema>;
-		formData: SuperFormData<FormSchema>;
 	};
-	let { field, form, formData }: InputProps = $props();
+	let { field, form }: InputProps = $props();
+	const { form: formData } = form;
 
 	let selectedEmail = $derived($formData.email ? { label: $formData.email, value: $formData.email } : undefined);
 </script>

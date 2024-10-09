@@ -18,9 +18,9 @@
 	type InputProps = {
 		field: FormField;
 		form: SuperForm<FormSchema>;
-		formData: SuperFormData<FormSchema>;
 	};
-	let { field, form, formData }: InputProps = $props();
+	let { field, form }: InputProps = $props();
+	const { form: formData } = form;
 
 	let open = $state(false);
 

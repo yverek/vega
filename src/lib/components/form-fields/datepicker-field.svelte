@@ -14,9 +14,9 @@
 	type InputProps = {
 		field: FormField;
 		form: SuperForm<FormSchema>;
-		formData: SuperFormData<FormSchema>;
 	};
-	let { field, form, formData }: InputProps = $props();
+	let { field, form }: InputProps = $props();
+	const { form: formData } = form;
 
 	const df = new DateFormatter('en-US', { dateStyle: 'long' });
 	let placeholder = $state(today(getLocalTimeZone()));

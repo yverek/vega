@@ -1,17 +1,31 @@
-export type fieldTypes = 'checkbox' | 'combobox' | 'datepicker' | 'input' | 'select' | 'slider' | 'switch' | 'textarea';
+import { fieldTypes } from './constants';
 
-export type FormField = {
+export type FieldTypes = (typeof fieldTypes)[number];
+
+export type BaseField = {
 	id: number;
-	type: fieldTypes;
 	name: string;
 	label: string;
-	value: string | boolean | Date | number;
-	checked: boolean;
-	setValue: (value: string | boolean) => void;
-	placeholder?: string;
 	required: boolean;
 	disabled: boolean;
 	description?: string;
-	onChange: (value: string | boolean | Date) => void;
-	onSelect: (value: string | boolean | Date) => void;
 };
+
+type CheckboxField = BaseField & { type: 'checkbox'; defaultValue: boolean };
+type ComboboxField = BaseField & { type: 'combobox'; defaultValue: string }; // TODO add data object
+type DatepickerField = BaseField & { type: 'datepicker'; defaultValue: string }; // TODO add data object
+type InputField = BaseField & { type: 'input'; defaultValue: string }; // TODO add data object
+type SelectField = BaseField & { type: 'select'; defaultValue: string }; // TODO add data object
+type SliderField = BaseField & { type: 'slider'; defaultValue: string }; // TODO add data object
+type SwitchField = BaseField & { type: 'switch'; defaultValue: boolean };
+type TextareaField = BaseField & { type: 'textarea'; defaultValue: string; min?: number; max?: number };
+
+export type FormField =
+	| CheckboxField
+	| ComboboxField
+	| DatepickerField
+	| InputField
+	| SelectField
+	| SliderField
+	| SwitchField
+	| TextareaField;

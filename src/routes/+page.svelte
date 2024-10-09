@@ -6,9 +6,7 @@
 	import EditFieldDialog from '$lib/components/playground/edit-field-dialog.svelte';
 	import FormFieldList from '$lib/components/playground/form-field-list.svelte';
 	import FieldSelector from '$lib/components/playground/form-field-selector.svelte';
-	import FormPreview from '$lib/components/playground/form-preview.svelte';
-
-	let { data } = $props();
+	import PreviewPanel from '$lib/components/playground/preview-panel.svelte';
 </script>
 
 <section class="flex flex-col">
@@ -17,7 +15,7 @@
 
 	<div class="my-8 flex gap-16">
 		<FormFieldList />
-		<FormPreview form={data.form} />
+		<PreviewPanel />
 	</div>
 </section>
 

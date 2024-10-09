@@ -21,27 +21,27 @@
 		<div class="col-span-2">
 			<Input
 				value={field.name}
-				on:change={(e) => formState.updateField({ ...field, name: (e.target as HTMLInputElement).value })}
+				on:change={(e) => formState.updateField(field.name, { ...field, name: (e.target as HTMLInputElement).value })}
 				placeholder="Enter name"
 			/>
 		</div>
 		<div class="col-span-2">
 			<Input
 				value={field.label}
-				on:change={(e) => formState.updateField({ ...field, label: (e.target as HTMLInputElement).value })}
+				on:change={(e) => formState.updateField(field.name, { ...field, label: (e.target as HTMLInputElement).value })}
 				placeholder="Enter label"
 			/>
 		</div>
 		<div class="col-span-1 pl-6">
 			<Checkbox
 				checked={field.required}
-				onCheckedChange={(checked) => formState.updateField({ ...field, required: !!checked })}
+				onCheckedChange={(checked) => formState.updateField(field.name, { ...field, required: !!checked })}
 			/>
 		</div>
 		<div class="col-span-1 pl-6">
 			<Checkbox
 				checked={field.disabled}
-				onCheckedChange={(checked) => formState.updateField({ ...field, disabled: !!checked })}
+				onCheckedChange={(checked) => formState.updateField(field.name, { ...field, disabled: !!checked })}
 			/>
 		</div>
 	</div>

@@ -3,24 +3,30 @@
 	import type { SuperFormData } from 'sveltekit-superforms/client';
 	import type { FormField } from '$lib/types';
 	import * as Form from '$lib/components/ui/form';
-	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
 	import type { FormSchema } from '$lib/state/form.svelte';
 
 	type InputProps = {
 		field: FormField;
 		form: SuperForm<FormSchema>;
-		formData: SuperFormData<FormSchema>;
 	};
-	let { field, form, formData }: InputProps = $props();
+	let { field, form }: InputProps = $props();
+	const { form: formData } = form;
 </script>
 
 <Form.Field {form} name={field.name}>
 	<Form.Control let:attrs>
 		<Form.Label>{field.label}</Form.Label>
-		<Input {...attrs} bind:value={$formData[field.name]} disabled={field.disabled} />
+		<Textarea
+			{...attrs}
+			placeholder={field.placeholder}
+			class="resize-none"
+			bind:value={$formData[field.name]}
+			disabled={field.disabled}
+		/>
+		{#if field.description}
+			<Form.Description>{field.description}</Form.Description>
+		{/if}
 	</Form.Control>
-	{#if field.description}
-		<Form.Description>{field.description}</Form.Description>
-	{/if}
 	<Form.FieldErrors />
 </Form.Field>
