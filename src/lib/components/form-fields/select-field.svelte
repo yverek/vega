@@ -1,14 +1,12 @@
 <script lang="ts">
 	import type { SuperForm } from 'sveltekit-superforms';
-	import type { SuperFormData } from 'sveltekit-superforms/client';
-	import type { FormField } from '$lib/types';
+	import type { SelectField } from '$lib/types';
 	import * as Form from '$lib/components/ui/form';
 	import * as Select from '$lib/components/ui/select';
-	// import { Input } from '$lib/components/ui/input';
 	import type { FormSchema } from '$lib/state/form.svelte';
 
 	type InputProps = {
-		field: FormField;
+		field: SelectField;
 		form: SuperForm<FormSchema>;
 	};
 	let { field, form }: InputProps = $props();

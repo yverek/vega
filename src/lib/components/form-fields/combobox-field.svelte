@@ -4,7 +4,7 @@
 	import ChevronsUpDown from 'lucide-svelte/icons/chevrons-up-down';
 	import Check from 'lucide-svelte/icons/check';
 
-	import type { FormField } from '$lib/types';
+	import type { ComboboxField } from '$lib/types';
 	import * as Form from '$lib/components/ui/form';
 	import * as Command from '$lib/components/ui/command';
 	import * as Popover from '$lib/components/ui/popover';
@@ -12,11 +12,10 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { cn } from '$lib/utils';
 	import type { SuperForm } from 'sveltekit-superforms';
-	import type { SuperFormData } from 'sveltekit-superforms/client';
 	import type { FormSchema } from '$lib/state/form.svelte';
 
 	type InputProps = {
-		field: FormField;
+		field: ComboboxField;
 		form: SuperForm<FormSchema>;
 	};
 	let { field, form }: InputProps = $props();

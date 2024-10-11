@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { SuperForm } from 'sveltekit-superforms';
-	import type { SuperFormData } from 'sveltekit-superforms/client';
 	import { CalendarDate, DateFormatter, getLocalTimeZone, parseDate, today } from '@internationalized/date';
-	import type { FormField } from '$lib/types';
+	import type { DatepickerField } from '$lib/types';
 	import * as Form from '$lib/components/ui/form';
 	import { Calendar } from '$lib/components/ui/calendar';
 	import * as Popover from '$lib/components/ui/popover';
@@ -12,7 +11,7 @@
 	import type { FormSchema } from '$lib/state/form.svelte';
 
 	type InputProps = {
-		field: FormField;
+		field: DatepickerField;
 		form: SuperForm<FormSchema>;
 	};
 	let { field, form }: InputProps = $props();

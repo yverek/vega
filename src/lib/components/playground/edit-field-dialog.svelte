@@ -8,6 +8,7 @@
 
 	import { dialogState } from '$lib/state/dialog.svelte';
 	import { formState } from '$lib/state/form.svelte';
+	import type { SwitchField } from '$lib/types';
 </script>
 
 <Dialog.Root open={dialogState.isOpen} onOutsideClick={() => (dialogState.isOpen = false)}>
@@ -69,11 +70,15 @@
 							{ value: false, label: 'false' }
 						]}
 						onSelectedChange={(v) => {
-							formState.updateField(dialogState.field.name, { ...dialogState.field, defaultValue: v.value });
+							v &&
+								formState.updateField(dialogState.field.name, {
+									...(dialogState.field as SwitchField),
+									value: v.value
+								});
 						}}
 					>
 						<Select.Trigger>
-							<Select.Value />
+							<Select.Value placeholder={`Select a default value`} />
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Item value={true} label="true" />

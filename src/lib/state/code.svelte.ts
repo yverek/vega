@@ -1,30 +1,19 @@
 import { formState } from './form.svelte';
-import type { FormField } from '$lib/types';
+import type {
+	CheckboxField,
+	ComboboxField,
+	DatepickerField,
+	InputField,
+	SelectField,
+	SliderField,
+	SwitchField,
+	TextareaField
+} from '$lib/types';
 
 export class CodeState {
 	#page = $derived(this.#buildPageCode());
 	#schema = $derived(this.#buildSchemaCode());
 	#server = this.#buildServerCode();
-	#fieldToString = {
-		checkbox: (field: FormField) => this.#checkboxToString(field),
-		combobox: (field: FormField) => this.#comboboxToString(field),
-		datepicker: (field: FormField) => this.#datepickerToString(field),
-		input: (field: FormField) => this.#inputToString(field),
-		select: (field: FormField) => this.#selectToString(field),
-		slider: (field: FormField) => this.#sliderToString(field),
-		switch: (field: FormField) => this.#switchToString(field),
-		textarea: (field: FormField) => this.#textareaToString(field)
-	};
-	#fieldToComponent = {
-		checkbox: (field: FormField) => this.#checkboxToComponent(field),
-		combobox: (field: FormField) => this.#comboboxToComponent(field),
-		datepicker: (field: FormField) => this.#datepickerToComponent(field),
-		input: (field: FormField) => this.#inputToComponent(field),
-		select: (field: FormField) => this.#selectToComponent(field),
-		slider: (field: FormField) => this.#sliderToComponent(field),
-		switch: (field: FormField) => this.#switchToComponent(field),
-		textarea: (field: FormField) => this.#textareaToComponent(field)
-	};
 
 	get page() {
 		return this.#page;
@@ -38,404 +27,535 @@ export class CodeState {
 		return this.#schema;
 	}
 
-	#checkboxToString({ name, required, defaultValue }: FormField) {
-		let code = `  ${name}: z.boolean()`;
+	#checkbox = {
+		toComponent: ({ name, label, description, disabled }: CheckboxField) => {
+			const code = [
+				`  <Form.Field {form} name="${name}" class="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">`,
+				`    <Form.Control let:attrs>`,
+				`      <Checkbox`,
+				`        {...attrs}`,
+				`        bind:checked={$formData.${name}}`,
+				disabled && `        disabled`,
+				`      />`,
+				`      <div class="space-y-1 leading-none">`,
+				`        <Form.Label>${label}</Form.Label>`,
+				description && `        <Form.Description>${description}</Form.Description>`,
+				`      </div>`,
+				`      <input name={attrs.name} value={$formData.${name}} hidden />`,
+				`    </Form.Control>`,
+				`    <Form.FieldErrors />`,
+				`  </Form.Field>`
+			];
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: CheckboxField) => {
+			let code = `  ${name}: z.boolean()`;
 
-		return code;
-	}
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-	#comboboxToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.string()`;
+			return code;
+		}
+	};
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+	#combobox = {
+		toComponent: ({ name, label, description, disabled }: ComboboxField) => {
+			// TODO this component is almost done, the last thing to do is to add {label, value} array to schema.ts
+			// TODO add button in dialog to build this array with user data
+			const code = [
+				`  <Form.Field {form} name="${name}" class="flex flex-col">`,
+				`    <Popover.Root bind:open let:ids>`,
+				`      <Form.Control let:attrs>`,
+				`        <Form.Label>${label}</Form.Label>`,
+				`        <Popover.Trigger`,
+				`          {...attrs}`,
+				`          role="combobox"`,
+				`          class={cn(`,
+				`            buttonVariants({ variant: 'outline' }),`,
+				`            'w-[200px] justify-between',`,
+				`            !$formData.${name} && 'text-muted-foreground'`,
+				`          )}`,
+				disabled && `          disabled`,
+				`        >`,
+				`          {languages.find((f) => f.value === $formData.${name})?.label ?? "Select language"}`,
+				`          <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />`,
+				`        </Popover.Trigger>`,
+				`        <input hidden value={$formData.${name}} name={attrs.name} />`,
+				`      </Form.Control>`,
+				`      <Popover.Content class="w-[200px] p-0">`,
+				`        <Command.Root>`,
+				`          <Command.Input autofocus placeholder="Search language..." class="h-9" />`,
+				`          <Command.Empty>No language found.</Command.Empty>`,
+				`          <Command.Group>`,
+				`            {#each languages as language}`,
+				`              <Command.Item value={language.label} onSelect={() => {`,
+				`                  $formData.${name} = language.value;`,
+				`                  closeAndFocusTrigger(ids.trigger);`,
+				`                }}`,
+				`              >`,
+				`                {language.label}`,
+				`                <Check class={cn("ml-auto h-4 w-4", language.value !== $formData.${name} && "text-transparent")} />`,
+				`              </Command.Item>`,
+				`            {/each}`,
+				`          </Command.Group>`,
+				`        </Command.Root>`,
+				`      </Popover.Content>`,
+				`    </Popover.Root>`,
+				description && `    <Form.Description>${description}</Form.Description>`,
+				`    <Form.FieldErrors />`,
+				`  </Form.Field>`
+			];
 
-		return code;
-	}
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: ComboboxField) => {
+			// TODO implement this
+			let code = `  ${name}: z.string()`;
 
-	#datepickerToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.string()`;
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+			return code;
+		}
+	};
 
-		return code;
-	}
+	#datepicker = {
+		toComponent: ({ name, label, description, disabled }: DatepickerField) => {
+			const code = [
+				`  <Form.Field {form} name="${name}" class="flex flex-col">`,
+				`    <Form.Control let:attrs>`,
+				`      <Form.Label>${label}</Form.Label>`,
+				`      <Popover.Root>`,
+				`        <Popover.Trigger`,
+				`          {...attrs}`,
+				`          class={cn(`,
+				`            buttonVariants({ variant: 'outline' }),`,
+				`            'w-[280px] justify-start pl-4 text-left font-normal',`,
+				`            !value && 'text-muted-foreground'`,
+				`          )}`,
+				disabled && `          disabled`,
+				`        >`,
+				`          {value ? df.format(value.toDate(getLocalTimeZone())) : "Pick a date"}`,
+				`          <CalendarIcon class="ml-auto h-4 w-4 opacity-50" />`,
+				`        </Popover.Trigger>`,
+				`        <Popover.Content class="w-auto p-0" side="top">`,
+				`          <Calendar`,
+				`            {value}`,
+				`            bind:placeholder`,
+				`            minValue={new CalendarDate(1900, 1, 1)}`,
+				`            maxValue={today(getLocalTimeZone())}`,
+				`            calendarLabel="${label}"`,
+				`            initialFocus`,
+				`            onValueChange={(v) => ($formData.${name} = v ? v.toString() : '')}`,
+				`          />`,
+				`        </Popover.Content>`,
+				`      </Popover.Root>`,
+				description && `      <Form.Description>${description}</Form.Description>`,
+				`      <Form.FieldErrors />`,
+				`      <input hidden value={$formData.${name}} name={attrs.name} />`,
+				`    </Form.Control>`,
+				`  </Form.Field>`
+			];
 
-	#inputToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.string()`;
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: DatepickerField) => {
+			// TODO implement this
+			let code = `  ${name}: z.string()`;
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-		return code;
-	}
+			return code;
+		}
+	};
 
-	#selectToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.string()`;
+	#input = {
+		toComponent: ({ name, label, placeholder, description, disabled, typeAttribute }: InputField) => {
+			const code = [
+				`  <Form.Field {form} name="${name}">`,
+				`    <Form.Control let:attrs>`,
+				`      <Form.Label>${label}</Form.Label>`,
+				`      <Input`,
+				`        {...attrs}`,
+				`        type="${typeAttribute}"`,
+				placeholder && `        placeholder="${placeholder}"`,
+				`        bind:value={$formData.${name}}`,
+				disabled && `        disabled`,
+				`      />`,
+				`    </Form.Control>`,
+				description && `    <Form.Description>${description}</Form.Description>`,
+				`    <Form.FieldErrors />`,
+				`  </Form.Field>`
+			];
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: InputField) => {
+			// TODO implement this
+			let code = `  ${name}: z.string()`;
 
-		return code;
-	}
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-	#sliderToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.string()`;
+			return code;
+		}
+	};
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+	#select = {
+		toComponent: ({ name, label, placeholder, description, disabled, values }: SelectField) => {
+			const selectContent = values.map((v) => `          <Select.Item value="${v.value}" label="${v.label}" />`);
 
-		return code;
-	}
+			const code = [
+				`  <Form.Field {form} name="${name}">`,
+				`    <Form.Control let:attrs>`,
+				`      <Form.Label>${label}</Form.Label>`,
+				`      <Select.Root`,
+				`        selected={selected${name}Value}`,
+				`        onSelectedChange={(v) => v && ($formData.${name} = v.value)}`,
+				disabled && `        disabled`,
+				`      >`,
+				`        <Select.Trigger {...attrs}>`,
+				placeholder && `          <Select.Value placeholder="${placeholder}" />`,
+				`        </Select.Trigger>`,
+				`        <Select.Content>`,
+				...selectContent,
+				`        </Select.Content>`,
+				`      </Select.Root>`,
+				`      <input hidden bind:value={$formData.${name}} name={attrs.name} />`,
+				`    </Form.Control>`,
+				description && `    <Form.Description>${description}</Form.Description>`,
+				`    <Form.FieldErrors />`,
+				`  </Form.Field>`
+			];
 
-	#switchToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.boolean()`;
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: SelectField) => {
+			// TODO implement this
+			let code = `  ${name}: z.string()`;
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-		return code;
-	}
+			return code;
+		}
+	};
 
-	#textareaToString({ name, required, defaultValue }: FormField) {
-		// TODO implement this
-		let code = `  ${name}: z.string()`;
+	#slider = {
+		toComponent: ({ name, label, description, disabled, min, max, step }: SliderField) => {
+			// TODO this must be fixed because bind:values doesn't work properly
+			const code = [
+				`  <Form.Field {form} name="${name}">`,
+				`    <Form.Control let:attrs>`,
+				`      <Form.Label>${label}</Form.Label>`,
+				`      <Slider`,
+				`        {...attrs}`,
+				`        min={${min}} max={${max}} step={${step}}`,
+				`        value={[$formData.${name}]}`,
+				disabled && `        disabled`,
+				`      />`,
+				`    </Form.Control>`,
+				description && `    <Form.Description>${description}</Form.Description>`,
+				`    <Form.FieldErrors />`,
+				`  </Form.Field>`
+			];
 
-		if (!required) code += '.optional()';
-		if (defaultValue) code += `.default(${defaultValue})`;
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: SliderField) => {
+			// TODO implement this
+			let code = `  ${name}: z.string()`;
 
-		return code;
-	}
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-	#checkboxToComponent({ name, label, description, disabled }: FormField) {
-		let result = '';
-		const isDisabled = disabled ? 'disabled ' : '';
+			return code;
+		}
+	};
 
-		result += `  <Form.Field {form} name="${name}" class="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Checkbox {...attrs} bind:checked={$formData.${name}} ${isDisabled}/>\n`;
-		result += `      <div class="space-y-1 leading-none">\n`;
-		result += `        <Form.Label>${label}</Form.Label>\n`;
-		if (description) result += `        <Form.Description>${description}</Form.Description>\n`;
-		result += `      </div>\n`;
-		result += `      <input name={attrs.name} value={$formData.${name}} hidden />\n`;
-		result += `    </Form.Control>\n`;
-		result += `    <Form.FieldErrors />\n`;
-		result += `  </Form.Field>\n`;
+	#switch = {
+		toComponent: ({ name, label, description, disabled }: SwitchField) => {
+			const code = [
+				`  <Form.Field {form} name="${name}" class="flex flex-row items-center justify-between rounded-lg border p-4">`,
+				`    <Form.Control let:attrs>`,
+				`      <div class="space-y-0.5">`,
+				`        <Form.Label>${label}</Form.Label>`,
+				description && `        <Form.Description>${description}</Form.Description>`,
+				`      </div>`,
+				`      <Switch `,
+				`        {...attrs}`,
+				`        includeInput`,
+				`        bind:checked={$formData.${name}}`,
+				disabled && `        disabled aria-readonly`,
+				`      />`,
+				`    </Form.Control>`,
+				`  </Form.Field>`
+			];
 
-		return result;
-	}
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: SwitchField) => {
+			// TODO implement this
+			let code = `  ${name}: z.boolean()`;
 
-	#comboboxToComponent({ name, label, description, disabled }: FormField) {
-		let result = '';
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-		// TODO this component is almost done, the last thing to do is to add {label, value} array to schema.ts
-		// TODO add button in dialog to build this array with user data
-		result += `  <Form.Field {form} name="${name}" class="flex flex-col">\n`;
-		result += `    <Popover.Root bind:open let:ids>\n`;
-		result += `      <Form.Control let:attrs>\n`;
-		result += `        <Form.Label>${label}</Form.Label>\n`;
-		result += `        <Popover.Trigger\n`;
-		result += `          {...attrs}\n`;
-		result += `          role="combobox"\n`;
-		result += `          class={cn(\n`;
-		result += `            buttonVariants({ variant: 'outline' }),\n`;
-		result += `            'w-[200px] justify-between',\n`;
-		result += `            !$formData.${name} && 'text-muted-foreground'\n`;
-		result += `          )}\n`;
-		if (disabled) result += `          disabled\n`;
-		result += `        >\n`;
-		result += `          {languages.find((f) => f.value === $formData.${name})?.label ?? "Select language"}\n`;
-		result += `          <ChevronsUpDown class="ml-2 h-4 w-4 shrink-0 opacity-50" />\n`;
-		result += `        </Popover.Trigger>\n`;
-		result += `        <input hidden value={$formData.${name}} name={attrs.name} />\n`;
-		result += `      </Form.Control>\n`;
-		result += `      <Popover.Content class="w-[200px] p-0">\n`;
-		result += `        <Command.Root>\n`;
-		result += `          <Command.Input autofocus placeholder="Search language..." class="h-9" />\n`;
-		result += `          <Command.Empty>No language found.</Command.Empty>\n`;
-		result += `          <Command.Group>\n`;
-		result += `            {#each languages as language}\n`;
-		result += `              <Command.Item value={language.label} onSelect={() => {\n`;
-		result += `                  $formData.${name} = language.value;\n`;
-		result += `                  closeAndFocusTrigger(ids.trigger);\n`;
-		result += `                }}\n`;
-		result += `              >\n`;
-		result += `                {language.label}\n`;
-		result += `                <Check class={cn("ml-auto h-4 w-4", language.value !== $formData.${name} && "text-transparent")} />\n`;
-		result += `              </Command.Item>\n`;
-		result += `            {/each}\n`;
-		result += `          </Command.Group>\n`;
-		result += `        </Command.Root>\n`;
-		result += `      </Popover.Content>\n`;
-		result += `    </Popover.Root>\n`;
-		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
-		result += `    <Form.FieldErrors />\n`;
-		result += `  </Form.Field>\n`;
+			return code;
+		}
+	};
 
-		return result;
-	}
+	#textarea = {
+		toComponent: ({ name, label, placeholder, disabled, description }: TextareaField) => {
+			const code = [
+				`  <Form.Field {form} name="${name}">`,
+				`    <Form.Control let:attrs>`,
+				`      <Form.Label>${label}</Form.Label>`,
+				`      <Textarea`,
+				`        {...attrs}`,
+				placeholder && `        placeholder="${placeholder}`,
+				`        class="resize-none"`,
+				`        bind:value={$formData.${name}}`,
+				disabled && `        disabled`,
+				`      />`,
+				description && `      <Form.Description>${description}</Form.Description>`,
+				`    </Form.Control>`,
+				`    <Form.FieldErrors />`,
+				`  </Form.Field>`
+			];
 
-	#datepickerToComponent({ name, label, description, disabled }: FormField) {
-		let result = '';
+			return code.filter((v) => v).join('\n');
+		},
+		toSchema: ({ name, required, value }: TextareaField) => {
+			// TODO implement this
+			let code = `  ${name}: z.string()`;
 
-		result += `  <Form.Field {form} name="${name}" class="flex flex-col">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Popover.Root>\n`;
-		result += `        <Popover.Trigger\n`;
-		result += `          {...attrs}\n`;
-		result += `          class={cn(\n`;
-		result += `            buttonVariants({ variant: 'outline' }),\n`;
-		result += `            'w-[280px] justify-start pl-4 text-left font-normal',\n`;
-		result += `            !value && 'text-muted-foreground'\n`;
-		result += `          )}\n`;
-		if (disabled) result += `          disabled\n`;
-		result += `        >\n`;
-		result += `          {value ? df.format(value.toDate(getLocalTimeZone())) : "Pick a date"}\n`;
-		result += `          <CalendarIcon class="ml-auto h-4 w-4 opacity-50" />\n`;
-		result += `        </Popover.Trigger>\n`;
-		result += `        <Popover.Content class="w-auto p-0" side="top">\n`;
-		result += `          <Calendar\n`;
-		result += `            {value}\n`;
-		result += `            bind:placeholder\n`;
-		result += `            minValue={new CalendarDate(1900, 1, 1)}\n`;
-		result += `            maxValue={today(getLocalTimeZone())}\n`;
-		result += `            calendarLabel="Date of birth"\n`;
-		result += `            initialFocus\n`;
-		result += `            onValueChange={(v) => ($formData.dob = v ? v.toString() : '')}\n`;
-		result += `          />\n`;
-		result += `        </Popover.Content>\n`;
-		result += `      </Popover.Root>\n`;
-		if (description) result += `      <Form.Description>${description}</Form.Description>\n`;
-		result += `      <Form.FieldErrors />\n`;
-		result += `      <input hidden value={$formData.${name}} name={attrs.name} />\n`;
-		result += `    </Form.Control>\n`;
-		result += `  </Form.Field>\n`;
+			if (!required) code += '.optional()';
+			if (value) code += `.default(${value})`;
 
-		return result;
-	}
+			return code;
+		}
+	};
 
-	#inputToComponent({ name, label, description, disabled }: FormField) {
-		let result = '';
-		const isDisabled = disabled ? 'disabled ' : '';
+	#generate = {
+		schemaList: () => {
+			const code = formState.fields.map((field) => {
+				let res = '';
 
-		// TODO add type="${type}" to this field
-		result += `  <Form.Field {form} name="${name}">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Input {...attrs} bind:value={$formData.${name}} ${isDisabled}/>\n`;
-		result += `    </Form.Control>\n`;
-		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
-		result += `    <Form.FieldErrors />\n`;
-		result += `  </Form.Field>\n`;
+				switch (field.type) {
+					case 'checkbox':
+						res = this.#checkbox.toSchema(field);
+						break;
+					case 'combobox':
+						res = this.#combobox.toSchema(field);
+						break;
+					case 'datepicker':
+						res = this.#datepicker.toSchema(field);
+						break;
+					case 'input':
+						res = this.#input.toSchema(field);
+						break;
+					case 'select':
+						res = this.#select.toSchema(field);
+						break;
+					case 'slider':
+						res = this.#slider.toSchema(field);
+						break;
+					case 'switch':
+						res = this.#switch.toSchema(field);
+						break;
+					case 'textarea':
+						res = this.#textarea.toSchema(field);
+						break;
+					default:
+						console.error('Invalid field type!');
+						break;
+				}
 
-		return result;
-	}
+				return res;
+			});
 
-	#selectToComponent({ name, label, description, placeholder, disabled }: FormField) {
-		let result = '';
+			return code.join(',\n');
+		},
+		fieldList: () => {
+			const code = formState.fields.map((field) => {
+				let res = '';
 
-		// TODO replace 3 select item with each loops from user input
-		result += `  <Form.Field {form} name="${name}">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Select.Root\n`;
-		result += `        selected={selectedEmail}\n`;
-		result += `        onSelectedChange={(v) => v && ($formData.${name} = v.value)}\n`;
-		if (disabled) result += `        disabled\n`;
-		result += `      >\n`;
-		result += `        <Select.Trigger {...attrs}>\n`;
-		result += `          <Select.Value placeholder="${placeholder}" />\n`;
-		result += `        </Select.Trigger>\n`;
-		result += `        <Select.Content>\n`;
-		result += `          <Select.Item value="m@example.com" label="m@example.com" />\n`;
-		result += `          <Select.Item value="m@google.com" label="m@google.com" />\n`;
-		result += `          <Select.Item value="m@support.com" label="m@support.com" />\n`;
-		result += `        </Select.Content>\n`;
-		result += `      </Select.Root>\n`;
-		result += `      <input hidden bind:value={$formData.${name}} name={attrs.name} />\n`;
-		result += `    </Form.Control>\n`;
-		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
-		result += `    <Form.FieldErrors />\n`;
-		result += `  </Form.Field>\n`;
+				switch (field.type) {
+					case 'checkbox':
+						res = this.#checkbox.toComponent(field);
+						break;
+					case 'combobox':
+						res = this.#combobox.toComponent(field);
+						break;
+					case 'datepicker':
+						res = this.#datepicker.toComponent(field);
+						break;
+					case 'input':
+						res = this.#input.toComponent(field);
+						break;
+					case 'select':
+						res = this.#select.toComponent(field);
+						break;
+					case 'slider':
+						res = this.#slider.toComponent(field);
+						break;
+					case 'switch':
+						res = this.#switch.toComponent(field);
+						break;
+					case 'textarea':
+						res = this.#textarea.toComponent(field);
+						break;
+					default:
+						console.error('Invalid field type!');
+						break;
+				}
 
-		return result;
-	}
+				return res;
+			});
 
-	#sliderToComponent({ name, label, description, disabled }: FormField) {
-		let result = '';
-		const isDisabled = disabled ? 'disabled ' : '';
+			return code.join('\n');
+		},
+		importList: () => {
+			const imports = new Set([
+				'  import { superForm } from "sveltekit-superforms";',
+				'  import { zodClient } from "sveltekit-superforms/adapters";\n',
+				'  import { schema } from "./schema";\n',
+				'  import * as Form from "$lib/components/ui/form";'
+			]);
 
-		// TODO replace min, max, step values from user input
-		// TODO this must be fixed because bind:values doesn't work properly
-		result += `  <Form.Field {form} name="${name}">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Slider {...attrs} value={[$formData.${name}]} min={0} max={100} step={1} ${isDisabled}/>\n`;
-		result += `    </Form.Control>\n`;
-		if (description) result += `    <Form.Description>${description}</Form.Description>\n`;
-		result += `    <Form.FieldErrors />\n`;
-		result += `  </Form.Field>\n`;
+			if (formState.fields.some(({ type }) => type === 'checkbox'))
+				imports.add('  import { Checkbox } from "$lib/components/ui/checkbox";');
 
-		return result;
-	}
+			if (formState.fields.some(({ type }) => type === 'combobox')) {
+				imports.add('  import * as Command from "$lib/components/ui/command";');
+				imports.add('  import * as Popover from "$lib/components/ui/popover";');
+				imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
+				imports.add('  import { cn } from "$lib/utils";');
+				imports.add('  import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";');
+				imports.add('  import Check from "lucide-svelte/icons/check";');
+				imports.add('  import { tick } from "svelte"');
+			}
 
-	#switchToComponent({ name, label, description, disabled }: FormField) {
-		let result = '';
-		const isDisabled = disabled ? 'disabled ' : '';
+			if (formState.fields.some(({ type }) => type === 'datepicker')) {
+				imports.add('  import { Calendar } from "$lib/components/ui/calendar";'); // or range calendar
+				imports.add('  import * as Popover from "$lib/components/ui/popover";');
+				imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
+				imports.add('  import { cn } from "$lib/utils";');
+				imports.add('  import CalendarIcon from "lucide-svelte/icons/calendar";');
+				imports.add(
+					'  import { CalendarDate, DateFormatter, getLocalTimeZone, parseDate, today } from "@internationalized/date";'
+				);
+			}
 
-		result += `  <Form.Field {form} name="${name}" class="flex flex-row items-center justify-between rounded-lg border p-4">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <div class="space-y-0.5">\n`;
-		result += `        <Form.Label>${label}</Form.Label>\n`;
-		if (description) result += `        <Form.Description>${description}</Form.Description>\n`;
-		result += `      </div>\n`;
-		result += `      <Switch {...attrs} includeInput bind:checked={$formData.${name}} ${isDisabled}/>\n`;
-		result += `    </Form.Control>\n`;
-		result += `  </Form.Field>\n`;
+			if (formState.fields.some(({ type }) => type === 'input'))
+				imports.add('  import { Input } from "$lib/components/ui/input";');
 
-		return result;
-	}
+			if (formState.fields.some(({ type }) => type === 'select'))
+				imports.add('  import * as Select from "$lib/components/ui/select";');
 
-	#textareaToComponent({ name, label, description, placeholder, disabled }: FormField) {
-		let result = '';
+			if (formState.fields.some(({ type }) => type === 'slider'))
+				imports.add('  import { Slider } from "$lib/components/ui/slider";');
 
-		result += `  <Form.Field {form} name="bio">\n`;
-		result += `    <Form.Control let:attrs>\n`;
-		result += `      <Form.Label>${label}</Form.Label>\n`;
-		result += `      <Textarea\n`;
-		result += `        {...attrs}\n`;
-		if (placeholder) result += `        placeholder="${placeholder}"\n`;
-		result += `        class="resize-none"\n`;
-		result += `        bind:value={$formData.${name}}\n`;
-		if (disabled) result += `        disabled\n`;
-		result += `      />\n`;
-		if (description) result += `      <Form.Description>${description}</Form.Description>\n`;
-		result += `    </Form.Control>\n`;
-		result += `    <Form.FieldErrors />\n`;
-		result += `  </Form.Field>\n`;
+			if (formState.fields.some(({ type }) => type === 'switch'))
+				imports.add('  import { Switch } from "$lib/components/ui/switch";');
 
-		return result;
-	}
+			if (formState.fields.some(({ type }) => type === 'textarea'))
+				imports.add('  import { Textarea } from "$lib/components/ui/textarea";');
+
+			return Array.from(imports).join('\n');
+		},
+		scriptCode: () => {
+			// TODO add name value to code
+			const code = new Set([
+				'  let { data } = $props();\n',
+				'  const form = superForm(data.form, {',
+				'    validators: zodClient(schema),',
+				'  });',
+				'  const { form: formData, enhance } = form;'
+			]);
+
+			if (formState.fields.some(({ type }) => type === 'combobox')) {
+				code.add('\n  /** combobox code */');
+				code.add('  let open = $state(false);\n'); // TODO this should  be open${name}
+				code.add('  // We want to refocus the trigger button when the user selects an item from the list');
+				code.add('  // so users can continue navigating the rest of the form with the keyboard.');
+				code.add('  function closeAndFocusTrigger(triggerId: string) {');
+				code.add('    open = false;');
+				code.add('    tick().then(() => document.getElementById(triggerId)?.focus());');
+				code.add('  }');
+				code.add('  /** end combobox code */');
+			}
+
+			if (formState.fields.some(({ type }) => type === 'datepicker')) {
+				code.add('\n  /** datepicker code */');
+				code.add('  const df = new DateFormatter("en-US", { dateStyle: "long" });');
+				code.add('  let placeholder = $state(today(getLocalTimeZone()));');
+				code.add('  let value = $derived($formData.dob ? parseDate($formData.dob) : undefined);');
+				code.add('  /** end datepicker code */');
+			}
+
+			if (formState.fields.some(({ type }) => type === 'select')) {
+				code.add('\n  /** select code */');
+				code.add(
+					`  let selectedEmail = $derived($formData.email ? { label: $formData.email, value: $formData.email } : undefined);`
+				);
+				code.add('  /** end select code */');
+			}
+
+			return Array.from(code).join('\n');
+		}
+	};
 
 	#buildSchemaCode() {
-		const zodFields = formState.fields.map((f) => this.#fieldToString[f.type](f)).join(',\n');
+		const code = [
+			`import { z } from "zod";`,
+			``,
+			`export const schema = z.object({`,
+			this.#generate.schemaList(),
+			`});`,
+			``
+		];
 
-		return `import { z } from "zod";\n\nexport const schema = z.object({\n${zodFields}\n});`;
+		return code.join('\n');
 	}
 
 	#buildServerCode() {
-		const imports = new Set([
-			'import { superValidate } from "sveltekit-superforms";',
-			'import { zod } from "sveltekit-superforms/adapters";',
-			'import type { PageServerLoad } from "./$types";',
-			'import { schema } from "./schema";',
-			'',
-			'export const load: PageServerLoad = async () => {',
-			'  return {',
-			'    form: await superValidate(zod(schema)),',
-			'  };',
-			'};'
-		]);
+		const code = [
+			`import { superValidate } from "sveltekit-superforms";`,
+			`import { zod } from "sveltekit-superforms/adapters";`,
+			`import type { PageServerLoad } from "./$types";`,
+			`import { schema } from "./schema";`,
+			``,
+			`export const load: PageServerLoad = async () => {`,
+			`  return {`,
+			`    form: await superValidate(zod(schema)),`,
+			`  };`,
+			`};`,
+			``
+		];
 
-		return Array.from(imports).join('\n') + '\n';
+		return code.join('\n');
 	}
 
 	#buildPageCode() {
-		let result = '<script lang="ts">\n';
+		const code = [
+			`<script lang="ts">`,
+			this.#generate.importList(),
+			``,
+			this.#generate.scriptCode(),
+			`</script>`,
+			``,
+			`<form method="POST" class="min-w-[500px] space-y-4" use:enhance>`,
+			this.#generate.fieldList(),
+			`  <Form.Button>Submit</Form.Button>`,
+			`</form>`,
+			``
+		];
 
-		const imports = new Set([
-			'  import { superForm } from "sveltekit-superforms";',
-			'  import { zodClient } from "sveltekit-superforms/adapters";\n',
-			'  import { schema } from "./schema";\n',
-			'  import * as Form from "$lib/components/ui/form";'
-		]);
-
-		const code = new Set([
-			'  let { data } = $props();\n',
-			'  const form = superForm(data.form, {',
-			'    validators: zodClient(schema),',
-			'  });',
-			'  const { form: formData, enhance } = form;\n'
-		]);
-
-		if (formState.fields.some(({ type }) => type === 'checkbox'))
-			imports.add('  import { Checkbox } from "$lib/components/ui/checkbox";');
-
-		if (formState.fields.some(({ type }) => type === 'combobox')) {
-			imports.add('  import * as Command from "$lib/components/ui/command";');
-			imports.add('  import * as Popover from "$lib/components/ui/popover";');
-			imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
-			imports.add('  import { cn } from "$lib/utils";');
-			imports.add('  import ChevronsUpDown from "lucide-svelte/icons/chevrons-up-down";');
-			imports.add('  import Check from "lucide-svelte/icons/check";');
-			imports.add('  import { tick } from "svelte"');
-
-			code.add('  let open = $state(false);\n');
-			code.add('  // We want to refocus the trigger button when the user selects an item from the list');
-			code.add('  // so users can continue navigating the rest of the form with the keyboard.');
-			code.add('  function closeAndFocusTrigger(triggerId: string) {');
-			code.add('    open = false;');
-			code.add('    tick().then(() => document.getElementById(triggerId)?.focus());');
-			code.add('  }\n');
-		}
-
-		if (formState.fields.some(({ type }) => type === 'datepicker')) {
-			imports.add('  import { Calendar } from "$lib/components/ui/calendar";'); // or range calendar
-			imports.add('  import * as Popover from "$lib/components/ui/popover";');
-			imports.add('  import { buttonVariants } from "$lib/components/ui/button";');
-			imports.add('  import { cn } from "$lib/utils";');
-			imports.add('  import CalendarIcon from "lucide-svelte/icons/calendar";');
-			imports.add(
-				'  import { CalendarDate, DateFormatter, getLocalTimeZone, parseDate, today } from "@internationalized/date";'
-			);
-
-			code.add('  const df = new DateFormatter("en-US", { dateStyle: "long" });');
-			code.add('  let placeholder = $state(today(getLocalTimeZone()));');
-			code.add('  let value = $derived($formData.dob ? parseDate($formData.dob) : undefined);\n');
-		}
-
-		if (formState.fields.some(({ type }) => type === 'input'))
-			imports.add('  import { Input } from "$lib/components/ui/input";');
-
-		if (formState.fields.some(({ type }) => type === 'select')) {
-			imports.add('  import * as Select from "$lib/components/ui/select";');
-
-			code.add(
-				`  let selectedEmail = $derived($formData.email ? { label: $formData.email, value: $formData.email } : undefined);\n`
-			);
-		}
-
-		if (formState.fields.some(({ type }) => type === 'slider'))
-			imports.add('  import { Slider } from "$lib/components/ui/slider";');
-
-		if (formState.fields.some(({ type }) => type === 'switch'))
-			imports.add('  import { Switch } from "$lib/components/ui/switch";');
-
-		if (formState.fields.some(({ type }) => type === 'textarea'))
-			imports.add('  import { Textarea } from "$lib/components/ui/textarea";');
-
-		result += Array.from(imports).join('\n') + '\n\n';
-		result += Array.from(code).join('\n');
-		result += '</script>\n\n';
-
-		result += '<form method="POST" class="min-w-[500px] space-y-4" use:enhance>\n';
-		result += formState.fields.map((field) => this.#fieldToComponent[field.type](field)).join('');
-		result += '  <Form.Button>Submit</Form.Button>\n';
-		result += '</form>\n';
-
-		return result;
+		return code.join('\n');
 	}
 }
 

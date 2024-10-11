@@ -7,8 +7,10 @@ type ZodSchema = Record<string, z.ZodTypeAny>;
 export class FormState {
 	#fields = $state<FormField[]>([]);
 	#schema = $state<ZodSchema>({});
-	#zodSchema = $derived(z.object(this.#schema));
-	#show = $state(true);
+	#zodSchema = $derived.by(() => {
+		console.log('dioemrdaaa');
+		return z.object(this.#schema);
+	});
 
 	#fieldToZod = {
 		checkbox: (field: FormField) => this.zodBoolean(field),
@@ -41,15 +43,11 @@ export class FormState {
 		return this.#zodSchema;
 	}
 
-	get show() {
-		return this.#show;
-	}
-
 	zodBoolean(field: FormField) {
 		let code: ZodTypeAny = z.boolean();
 
 		if (!field.required) code = code.optional();
-		if (field.defaultValue) code = code.default(field.defaultValue);
+		if (field.value) code = code.default(field.value);
 
 		return code;
 	}
@@ -88,7 +86,6 @@ export class FormState {
 	}
 
 	addField(type: FieldTypes) {
-		this.#show = false;
 		const id = window.crypto.getRandomValues(new Uint32Array(1))[0];
 
 		let newField!: FormField;
@@ -103,22 +100,44 @@ export class FormState {
 			disabled: false
 		};
 
-		if (type === 'checkbox') newField = { ...baseField, type: 'checkbox', defaultValue: false };
-		if (type === 'combobox') newField = { ...baseField, type: 'combobox', defaultValue: '' };
-		if (type === 'datepicker') newField = { ...baseField, type: 'datepicker', defaultValue: '' };
-		if (type === 'input') newField = { ...baseField, type: 'input', defaultValue: '' };
-		if (type === 'select') newField = { ...baseField, type: 'select', defaultValue: '' };
-		if (type === 'slider') newField = { ...baseField, type: 'slider', defaultValue: '' };
-		if (type === 'switch') newField = { ...baseField, type: 'switch', defaultValue: false };
-		if (type === 'textarea') newField = { ...baseField, type: 'textarea', defaultValue: '' };
+		if (type === 'checkbox') newField = { ...baseField, type: 'checkbox', value: false };
+
+		if (type === 'combobox') newField = { ...baseField, type: 'combobox', value: '' };
+
+		if (type === 'datepicker')
+			newField = {
+				...baseField,
+				type: 'datepicker',
+				value: ''
+			};
+
+		if (type === 'input') newField = { ...baseField, type: 'input', value: '', typeAttribute: 'text' };
+
+		if (type === 'select') {
+			newField = {
+				...baseField,
+				type: 'select',
+				value: '',
+				values: [
+					{ label: 'Label 1', value: 'Value 1' },
+					{ label: 'Label 2', value: 'Value 2' },
+					{ label: 'Label 3', value: 'Value 3' }
+				]
+			};
+		}
+
+		if (type === 'slider') newField = { ...baseField, type: 'slider', value: 50, min: 0, max: 100, step: 1 };
+
+		if (type === 'switch') newField = { ...baseField, type: 'switch', value: false };
+
+		if (type === 'textarea') newField = { ...baseField, type: 'textarea', value: '' };
 
 		this.#fields.push(newField);
 		this.#schema[newField.name] = this.#fieldToZod[type](newField);
-		this.#show = true;
+		console.log('🚀 ~ FormState ~ this.#schema:', this.#schema);
 	}
 
 	updateField(oldName: string, data: FormField) {
-		this.#show = false;
 		const index = this.#fields.map((f) => f.name).indexOf(oldName);
 
 		this.#fields[index] = {
@@ -128,8 +147,7 @@ export class FormState {
 
 		delete this.#schema[oldName];
 		this.#schema[data.name] = this.#fieldToZod[data.type](data);
-
-		this.#show = true;
+		console.log('🚀 ~ FormState ~ this.#schema:', this.#schema);
 	}
 
 	removeField(name: string) {
