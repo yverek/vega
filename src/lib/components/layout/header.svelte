@@ -15,7 +15,7 @@
 
 		<div class="flex gap-2">
 			<ThemeSwitcher />
-			<Button href="https://github.com/yverek/svelte-form-builder" variant="outline" size="icon">
+			<Button href="https://github.com/yverek/vega" variant="outline" size="icon">
 				<Github />
 				<span class="sr-only">Github repo</span>
 			</Button>
