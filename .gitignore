@@ -23,3 +23,10 @@ vite.config.ts.timestamp-*
 # wrangler files
 .wrangler
 .dev.vars
+
+# test
+test_suite_analysis
+managed_context
+coverage
+playwright-report
+test-results
