@@ -1,5 +1,4 @@
 import type { BaseField, FieldTypes, FormField } from '$lib/types';
-import type { Infer, SuperValidated } from 'sveltekit-superforms';
 import { z, type ZodTypeAny } from 'zod';
 
 type ZodSchema = Record<string, z.ZodTypeAny>;
@@ -7,10 +6,7 @@ type ZodSchema = Record<string, z.ZodTypeAny>;
 export class FormState {
 	#fields = $state<FormField[]>([]);
 	#schema = $state<ZodSchema>({});
-	#zodSchema = $derived.by(() => {
-		console.log('dioemrdaaa');
-		return z.object(this.#schema);
-	});
+	#zodSchema = $state(z.object(this.#schema));
 
 	#fieldToZod = {
 		checkbox: (field: FormField) => this.zodBoolean(field),
@@ -53,7 +49,7 @@ export class FormState {
 	}
 
 	zodNumber(field: FormField) {
-		// console.log('🚀 ~ FormState ~ field:', field);
+		console.log('🚀 ~ FormState ~ field:', field);
 		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		// let res = `z.number(${isRequired}),\n`;
@@ -64,7 +60,7 @@ export class FormState {
 	}
 
 	zodString(field: FormField) {
-		// console.log('🚀 ~ FormState ~ field:', field);
+		console.log('🚀 ~ FormState ~ field:', field);
 		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		// let res = `z.string(${isRequired}),\n`;
@@ -75,7 +71,7 @@ export class FormState {
 	}
 
 	zodDate(field: FormField) {
-		// console.log('🚀 ~ FormState ~ field:', field);
+		console.log('🚀 ~ FormState ~ field:', field);
 		// const isRequired = field.required ? `{ required_error: "${field.label} is required" }` : '';
 
 		// let res = `z.date(${isRequired}),\n`;
@@ -134,7 +130,7 @@ export class FormState {
 
 		this.#fields.push(newField);
 		this.#schema[newField.name] = this.#fieldToZod[type](newField);
-		console.log('🚀 ~ FormState ~ this.#schema:', this.#schema);
+		this.#zodSchema = z.object(this.#schema);
 	}
 
 	updateField(oldName: string, data: FormField) {
@@ -147,16 +143,16 @@ export class FormState {
 
 		delete this.#schema[oldName];
 		this.#schema[data.name] = this.#fieldToZod[data.type](data);
-		console.log('🚀 ~ FormState ~ this.#schema:', this.#schema);
+		this.#zodSchema = z.object(this.#schema);
 	}
 
 	removeField(name: string) {
 		this.#fields = this.#fields.filter((f) => f.name !== name);
 		delete this.#schema[name];
+		this.#zodSchema = z.object(this.#schema);
 	}
 }
 
 export const formState = new FormState();
 
-export type FormSchema = Infer<typeof formState.zodSchema>;
-export type ValidatedFormSchema = SuperValidated<FormSchema>;
+export type FormSchema = typeof formState.zodSchema;
